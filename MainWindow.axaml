@@ -2,8 +2,32 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        xmlns:svg="clr-namespace:Avalonia.Svg.Skia;assembly=Avalonia.Svg.Skia"
+        mc:Ignorable="d" d:DesignWidth="1024" d:DesignHeight="600"
+        Width="1024" Height="600"
         x:Class="WorkScedulerApp.MainWindow"
         Title="WorkScedulerApp">
-    Welcome to Avalonia!
+        
+        
+        
+        <Grid ColumnDefinitions="Auto, *" Background="{DynamicResource PrimaryBackground}">
+                <Border Padding="20" Background="{DynamicResource PrimaryBackgroundGradient}">
+                        <Grid RowDefinitions="*, Auto">
+                                <StackPanel Spacing="12">
+                                        <svg:Svg Path="Assets/Images/Logo.svg" Width="200" Height="100" />
+                                        
+                                        <Button Content="Home" HorizontalAlignment="Stretch"></Button>
+                                        <Button Content="Process" HorizontalAlignment="Stretch"></Button>
+                                        <Button Content="Actions" HorizontalAlignment="Stretch"></Button>
+                                        <Button Content="Macros" HorizontalAlignment="Stretch"></Button>
+                                        <Button Content="Reporter" HorizontalAlignment="Stretch"></Button>
+                                        <Button Content="History" HorizontalAlignment="Stretch"></Button>
+                                </StackPanel>
+                                <Button Grid.Row="1" Content="Settings" ></Button>
+                               
+                        </Grid>
+                </Border>
+                
+        </Grid>
+        
 </Window>

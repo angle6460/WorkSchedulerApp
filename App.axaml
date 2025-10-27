@@ -10,6 +10,7 @@
     </Application.Styles>
              
     <Application.Resources>
+        
         <SolidColorBrush x:Key="PrimaryBackground">#14172D</SolidColorBrush>
         <SolidColorBrush x:Key="PrimaryText">#CFCFCF</SolidColorBrush>
         <LinearGradientBrush x:Key="PrimaryBackgroundGradient" StartPoint="0%, 0%" EndPoint="100%, 0%">
@@ -19,5 +20,8 @@
         
         <SolidColorBrush x:Key="PrimaryHover">#333B5A</SolidColorBrush>
         <SolidColorBrush x:Key="PrimaryHoverText">White</SolidColorBrush>
+        
+        <FontFamily x:Key="PhosphorFill">/Assets/Font/Phosphor-Fill.ttf#Phosphor-Fill</FontFamily>
+        <FontFamily x:Key="Phosphor">/Assets/Font/Phosphor.ttf#Phosphor</FontFamily>
     </Application.Resources>
 </Application>

@@ -16,14 +16,38 @@
                                 <StackPanel Spacing="12">
                                         <svg:Svg Path="Assets/Images/Logo.svg" Width="200" Height="100" />
                                         
-                                        <Button Content="Home" HorizontalAlignment="Stretch"></Button>
-                                        <Button Content="Process" HorizontalAlignment="Stretch"></Button>
-                                        <Button Content="Actions" HorizontalAlignment="Stretch"></Button>
-                                        <Button Content="Macros" HorizontalAlignment="Stretch"></Button>
-                                        <Button Content="Reporter" HorizontalAlignment="Stretch"></Button>
-                                        <Button Content="History" HorizontalAlignment="Stretch"></Button>
+                                        <Button HorizontalAlignment="Stretch">
+                                                <StackPanel Orientation="Horizontal">
+                                                        <Label Classes="Icon" Content="&#xe2c2;"></Label>
+                                                        <Label Content="Home"></Label>
+                                                </StackPanel>
+                                        </Button>
+                                        <Button HorizontalAlignment="Stretch">
+                                                <StackPanel Orientation="Horizontal">
+                                                        <Label Classes="Icon" Content="&#xE80E;"></Label>
+                                                        <Label Content="Work"></Label>
+                                                </StackPanel>
+                                        </Button>
+                                        <Button HorizontalAlignment="Stretch">
+                                                <StackPanel Orientation="Horizontal">
+                                                        <Label Classes="Icon" Content="&#xE7B2;"></Label>
+                                                        <Label Content="Daily Work"></Label>
+                                                </StackPanel>
+                                        </Button>
+                                        <Button HorizontalAlignment="Stretch">
+                                                <StackPanel Orientation="Horizontal">
+                                                        <Label Classes="Icon" Content="&#xE7B4;"></Label>
+                                                        <Label Content="Weekly Work"></Label>
+                                                </StackPanel>
+                                        </Button>
+                                        <Button HorizontalAlignment="Stretch">
+                                                <StackPanel Orientation="Horizontal">
+                                                        <Label Classes="Icon" Content="&#xE68C;"></Label>
+                                                        <Label Content="Employees"></Label>
+                                                </StackPanel>
+                                        </Button>
                                 </StackPanel>
-                                <Button Grid.Row="1" Content="Settings" ></Button>
+                                <Button Grid.Row="1" Classes="Transparent" ><Label Classes="Icon" Content="&#xe272;"></Label></Button>
                                
                         </Grid>
                 </Border>

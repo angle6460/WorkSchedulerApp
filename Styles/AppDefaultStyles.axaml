@@ -1,21 +1,64 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Design.PreviewWith>
-        <Border Padding="20">
+        <Border Padding="5">
             <!-- Add Controls for Previewer Here -->
-            <Button Content="Hello World!"></Button>
+            <StackPanel Background="{DynamicResource PrimaryBackgroundGradient}" Width="200" Spacing="10" >
+                <Button HorizontalAlignment="Stretch">
+                    <StackPanel Orientation="Horizontal">
+                        <Label Classes="Icon" Content="&#xe2c2;"></Label>
+                        <Label Content="Home"></Label>
+                    </StackPanel>
+                </Button>
+                <Button Classes="Transparent"><Label Classes="Icon" Content="&#xe272;"></Label></Button>
+            </StackPanel>
+            
+            
             
         </Border>
     </Design.PreviewWith>
 
     <!-- Add Styles Here -->
+    <Style Selector="Label.Icon">
+        <Setter Property="FontFamily" Value="{DynamicResource PhosphorFill}"></Setter>
+        <Setter Property="Padding" Value="2 5 2 5"></Setter>
+    </Style>
+    
     <Style Selector="Button">
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Foreground" Duration="0:0:0:.01"/>
+            </Transitions>
+        </Setter>
         <Setter Property="Foreground" Value="{DynamicResource PrimaryText}"></Setter>
         <Setter Property="FontSize" Value="20"></Setter>
         <Setter Property="Background" Value="{DynamicResource PrimaryBackground}"></Setter>
     </Style>
+    
     <Style Selector="Button:pointerover /template/ ContentPresenter">
         <Setter Property="Foreground" Value="{DynamicResource PrimaryHoverText}"></Setter>
         <Setter Property="Background" Value="{DynamicResource PrimaryHover}"></Setter>
+        
     </Style>
+    
+    <Style Selector="Button.Transparent">
+        <Setter Property="Background" Value="Transparent"></Setter>
+    </Style>
+    <Style Selector="Button.Transparent:pointerover /template/ ContentPresenter">
+        
+        <Setter Property="Background" Value="Transparent"></Setter>
+    </Style>
+    <Style Selector="Button.Transparent Label">
+        
+        <Setter Property="Transitions">
+            <Transitions>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0:.01"></TransformOperationsTransition>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Button.Transparent:pointerover Label">
+        <Setter Property="RenderTransform" Value="scale(1.1)"></Setter>
+    </Style>
+    
+    
 </Styles>

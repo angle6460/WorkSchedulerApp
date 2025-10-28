@@ -19,25 +19,17 @@
             <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
         </PackageReference>
+        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     </ItemGroup>
 
     <ItemGroup>
       <None Remove="Assets\Images\Logo.png" />
       <None Remove="Assets\Images\Logo.svg" />
       <AvaloniaResource Include="Assets\Images\Logo.svg" />
-      <None Remove="Assets\Fonts\Akko Pro Regular.ttf" />
-      <AvaloniaResource Include="Assets\Fonts\Akko Pro Regular.ttf" />
-      <None Remove="Assets\Fonts\Phosphor.ttf" />
-      <AvaloniaResource Include="Assets\Fonts\Phosphor.ttf" />
-      <None Remove="Assets\Fonts\Phosphor-Fill.ttf" />
-      <AvaloniaResource Include="Assets\Fonts\Phosphor-Fill.ttf" />
       <None Remove="Assets\Font\Phosphor.ttf" />
       <AvaloniaResource Include="Assets\Font\Phosphor.ttf" />
       <None Remove="Assets\Font\Phosphor-Fill.ttf" />
       <AvaloniaResource Include="Assets\Font\Phosphor-Fill.ttf" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Assets\Fonts\" />
-    </ItemGroup>
 </Project>

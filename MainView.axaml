@@ -5,7 +5,7 @@
         xmlns:svg="clr-namespace:Avalonia.Svg.Skia;assembly=Avalonia.Svg.Skia"
         mc:Ignorable="d" d:DesignWidth="1024" d:DesignHeight="600"
         Width="1024" Height="600"
-        x:Class="WorkScedulerApp.MainWindow"
+        x:Class="WorkScedulerApp.MainView"
         Title="WorkScedulerApp">
         
         

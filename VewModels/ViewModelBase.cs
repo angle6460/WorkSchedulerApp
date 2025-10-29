@@ -1,6 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace BatchProcces3.VeiwModels;
+namespace WorkScedulerApp.ViewModels;
 
 public class ViewModelBase : ObservableObject
 {

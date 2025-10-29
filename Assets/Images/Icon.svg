@@ -1,0 +1,21 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+    <rect width="512" height="512" fill="none"/>
+    <g stroke="#0a2540" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+        <!-- Calendar top bar -->
+        <rect x="96" y="96" width="320" height="320" rx="32" ry="32" fill="#ffffff"/>
+        <rect x="96" y="96" width="320" height="80" rx="16" ry="16" fill="#3b82f6"/>
+        <!-- Calendar rings -->
+        <line x1="176" y1="64" x2="176" y2="96" />
+        <line x1="336" y1="64" x2="336" y2="96" />
+        <!-- Calendar grid -->
+        <rect x="144" y="208" width="48" height="48" rx="8" ry="8" fill="#dbeafe"/>
+        <rect x="224" y="208" width="48" height="48" rx="8" ry="8" fill="#dbeafe"/>
+        <rect x="304" y="208" width="48" height="48" rx="8" ry="8" fill="#dbeafe"/>
+        <rect x="144" y="288" width="48" height="48" rx="8" ry="8" fill="#dbeafe"/>
+        <rect x="224" y="288" width="48" height="48" rx="8" ry="8" fill="#dbeafe"/>
+        <rect x="304" y="288" width="48" height="48" rx="8" ry="8" fill="#dbeafe"/>
+        <!-- Checkmark -->
+        <path d="M192 320l40 40 88-88" fill="none" stroke="#3b82f6" stroke-width="24"/>
+    </g>
+
+</svg>

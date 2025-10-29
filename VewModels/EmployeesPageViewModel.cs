@@ -1,6 +1,12 @@
-﻿namespace WorkScedulerApp.ViewModels;
+﻿using WorkScedulerApp.Data;
 
-public partial class EmployeesPageViewModel : ViewModelBase
+namespace WorkScedulerApp.ViewModels;
+
+public partial class EmployeesPageViewModel : PageViewModel
 {
-    public string Test { get; set; } = "home";
+
+    public EmployeesPageViewModel()
+    {
+        PageName = ApplicationPageNames.Employees;
+    }
 }

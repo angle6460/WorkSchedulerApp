@@ -20,6 +20,7 @@
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
         </PackageReference>
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.10" />
     </ItemGroup>
 
     <ItemGroup>
@@ -32,6 +33,13 @@
       <AvaloniaResource Include="Assets\Font\Phosphor-Fill.ttf" />
       <None Remove="Assets\Images\Icon.svg" />
       <AvaloniaResource Include="Assets\Images\Icon.svg" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Views\MainView.axaml.cs">
+        <DependentUpon>MainView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
     </ItemGroup>
 
 </Project>

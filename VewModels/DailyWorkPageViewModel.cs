@@ -1,6 +1,11 @@
-﻿namespace WorkScedulerApp.ViewModels;
+﻿using WorkScedulerApp.Data;
 
-public partial class DailyWorkPageViewModel : ViewModelBase
+namespace WorkScedulerApp.ViewModels;
+
+public partial class DailyWorkPageViewModel : PageViewModel
 {
-    public string Test { get; set; } = "home";
+    public DailyWorkPageViewModel()
+    {
+        PageName = ApplicationPageNames.DailyWork;
+    }
 }

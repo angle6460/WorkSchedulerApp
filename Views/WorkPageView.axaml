@@ -8,5 +8,5 @@
              x:DataType="vm:WorkPageViewModel">
     <Design.DataContext><vm:WorkPageViewModel></vm:WorkPageViewModel></Design.DataContext>
     
-    <Label Content="{Binding Test}"></Label>
+    <Label Content="WORK"></Label>
 </UserControl>

@@ -12,7 +12,7 @@
         Title="WorkScedulerApp">
         
         <!-- Only Affects Preview -->
-        <Design.DataContext><vm:MainViewModel></vm:MainViewModel></Design.DataContext>
+        <!-- <Design.DataContext><vm:MainViewModel></vm:MainViewModel></Design.DataContext> -->
         
         <Grid ColumnDefinitions="Auto, *" Background="{DynamicResource PrimaryBackground}">
                 <!-- main area -->
@@ -56,7 +56,7 @@
                                                 </StackPanel>
                                         </Button>
                                 </StackPanel>
-                                <Button Grid.Row="1" Classes="Transparent" ><Label Classes="Icon" Content="&#xe272;"></Label></Button>
+                                <Button Grid.Row="1" Classes="Transparent" Command="{Binding GoToSettingPageCommand}"><Label Classes="Icon" Content="&#xe272;"></Label></Button>
                                
                         </Grid>
                 </Border>

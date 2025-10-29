@@ -4,7 +4,7 @@
         <Border Padding="5">
             <!-- Add Controls for Previewer Here -->
             <StackPanel Background="{DynamicResource PrimaryBackgroundGradient}" Width="200" Spacing="10" >
-                <Button HorizontalAlignment="Stretch">
+                <Button HorizontalAlignment="Stretch" Classes="active">
                     <StackPanel Orientation="Horizontal">
                         <Label Classes="Icon" Content="&#xe2c2;"></Label>
                         <Label Content="Home"></Label>
@@ -53,9 +53,12 @@
         </Setter>
     </Style>
     
+    
     <Style Selector="Button.Transparent:pointerover Label">
         <Setter Property="RenderTransform" Value="scale(1.1)"></Setter>
     </Style>
-    
+    <Style Selector="Button.active /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource PrimaryActive}"></Setter>
+    </Style>
     
 </Styles>

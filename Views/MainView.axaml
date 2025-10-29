@@ -12,7 +12,7 @@
         Title="WorkScedulerApp">
         
         <!-- Only Affects Preview -->
-        <!-- <Design.DataContext><vm:MainViewModel></vm:MainViewModel></Design.DataContext> -->
+        <Design.DataContext><vm:MainViewModel></vm:MainViewModel></Design.DataContext>
         
         <Grid ColumnDefinitions="Auto, *" Background="{DynamicResource PrimaryBackground}">
                 <!-- main area -->

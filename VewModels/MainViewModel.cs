@@ -44,8 +44,14 @@ public partial class MainViewModel : ViewModelBase
     {
         SideMenuExpanded = !SideMenuExpanded;
     }
-
     
+    /// <summary>
+    /// Design-time only constructor
+    /// </summary>
+    public MainViewModel()
+    {
+        CurrentPage = new SettingsPageViewModel();
+    }
     
 
     public MainViewModel(PageFactory pageFactory)

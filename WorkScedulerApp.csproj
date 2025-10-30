@@ -33,6 +33,8 @@
       <AvaloniaResource Include="Assets\Font\Phosphor-Fill.ttf" />
       <None Remove="Assets\Images\Icon.svg" />
       <AvaloniaResource Include="Assets\Images\Icon.svg" />
+      <None Remove="Assets\Images\Banner.svg" />
+      <AvaloniaResource Include="Assets\Images\Banner.svg" />
     </ItemGroup>
 
     <ItemGroup>

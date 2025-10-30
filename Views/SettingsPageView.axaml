@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:svg="clr-namespace:Avalonia.Svg.Skia;assembly=Avalonia.Svg.Skia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="WorkScedulerApp.Views.SettingsPageView"
              Background="{DynamicResource PrimaryBackground}"
@@ -9,8 +10,8 @@
     
     <Grid ColumnDefinitions="*, *" RowDefinitions="Auto, *">
         <!-- Header -->
-        <Grid>
-            
+        <Grid Name="HeaderGrid" Grid.ColumnSpan="2">
+            <svg:Svg Path="/Assets/Images/Banner.svg" />
         </Grid>
         <Grid Grid.Column="0" Grid.Row="1">
             

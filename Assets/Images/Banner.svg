@@ -1,0 +1,35 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" width="1200" height="300">
+    <!-- Transparent background -->
+    <rect width="1200" height="300" fill="none"/>
+
+    <!-- Left accent shape -->
+    <path d="M0 0 H420 C520 0 540 300 0 300 Z" fill="#151E3E" />
+
+    <!-- Right accent gradient -->
+    <linearGradient id="rightAccent" x1="0" x2="1" y1="0" y2="0">
+        <stop offset="0.6" stop-color="#3b82f6" stop-opacity="0"/>
+        <stop offset="1" stop-color="#151E3E" stop-opacity="0.3"/>
+    </linearGradient>
+    <rect x="800" y="0" width="400" height="300" fill="url(#rightAccent)" />
+
+    <!-- Inline calendar icon -->
+    <g transform="translate(60,40) scale(0.43)">
+        <g stroke="#0a2540" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Calendar body -->
+            <rect x="96" y="96" width="320" height="320" rx="32" ry="32" fill="#ffffff"/>
+            <rect x="96" y="96" width="320" height="80" rx="16" ry="16" fill="#3b82f6"/>
+            <!-- Rings -->
+            <line x1="176" y1="64" x2="176" y2="96" />
+            <line x1="336" y1="64" x2="336" y2="96" />
+            <!-- Grid -->
+            <rect x="144" y="208" width="48" height="48" rx="8" ry="8" fill="#dbeafe"/>
+            <rect x="224" y="208" width="48" height="48" rx="8" ry="8" fill="#dbeafe"/>
+            <rect x="304" y="208" width="48" height="48" rx="8" ry="8" fill="#dbeafe"/>
+            <rect x="144" y="288" width="48" height="48" rx="8" ry="8" fill="#dbeafe"/>
+            <rect x="224" y="288" width="48" height="48" rx="8" ry="8" fill="#dbeafe"/>
+            <rect x="304" y="288" width="48" height="48" rx="8" ry="8" fill="#dbeafe"/>
+            <!-- Checkmark -->
+            <path d="M192 320l40 40 88-88" fill="none" stroke="#3b82f6" stroke-width="24"/>
+        </g>
+    </g>
+</svg>

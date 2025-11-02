@@ -3,23 +3,29 @@
     <Design.PreviewWith>
         <Border Padding="5">
             <!-- Add Controls for Previewer Here -->
-            <StackPanel Background="{DynamicResource PrimaryBackgroundGradient}" Width="200" Spacing="10" >
-                <Button Content="default"/>
-                <Button Classes="Subtle" Content="subtle"/>
-                <Button Classes="Outline" Content="outline"/>
-                <Button Classes="Alert" Content="Alert" />
-                <Button Content=""/>
-                <Button HorizontalAlignment="Stretch" Classes="active">
-                    <StackPanel Orientation="Horizontal">
-                        <Label Classes="Icon" Content="&#xe2c2;"></Label>
-                        <Label Content="Home"></Label>
-                    </StackPanel>
-                </Button>
-                <Button Classes="Transparent"><Label Classes="Icon" Content="&#xe272;"></Label></Button>
+            <StackPanel Orientation="Horizontal" Background="{DynamicResource PrimaryBackgroundGradient}">
+                <StackPanel  Width="200" Spacing="10" >
+                    <Button Content="default"/>
+                    <Button Classes="Subtle" Content="subtle"/>
+                    <Button Classes="Outline" Content="outline"/>
+                    <Button Classes="Alert" Content="Alert" />
+                    <Button Content=""/>
+                    <Button HorizontalAlignment="Stretch" Classes="active">
+                        <StackPanel Orientation="Horizontal">
+                            <Label Classes="Icon" Content="&#xe2c2;"></Label>
+                            <Label Content="Home"></Label>
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="Transparent"><Label Classes="Icon" Content="&#xe272;"></Label></Button>
+                </StackPanel>
+                <StackPanel Width="150">
+                    <CheckBox/>
+                    <CheckBox Content="Has Content"></CheckBox>
+                    <CheckBox IsChecked="True"/>
+                    <CheckBox IsChecked="True" Content="Has Content"></CheckBox>
+
+                </StackPanel>
             </StackPanel>
-            
-            
-            
         </Border>
     </Design.PreviewWith>
 
@@ -94,4 +100,55 @@
         <Setter Property="Background" Value="{DynamicResource PrimaryActive}"></Setter>
     </Style>
     
+    
+    <!-- Checkbox styles -->
+    <Style Selector="CheckBox">
+        <Setter Property="Background" Value="{DynamicResource PrimaryButtonBackgroundGradient}"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="FontSize" Value="20"></Setter>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Grid ColumnDefinitions="Auto,*" VerticalAlignment="Center" Margin="4,2">
+                    <!-- Box outline -->
+                    <Border Width="20" Height="20"
+                            CornerRadius="6"
+                            BorderThickness="2"
+                            BorderBrush="{DynamicResource PrimaryButtonBackgroundGradient}"
+                            Background="Transparent">
+                        <Path Name="CheckMark"
+                              Data="M5,8 L8,12 L12,4"
+                              Stroke="{DynamicResource PrimaryButtonBackgroundGradient}"
+                              StrokeThickness="2.5"
+                              StrokeLineCap="Round"
+                              
+                              Opacity="0"/>
+                    </Border>
+
+                    <!-- Label -->
+                    <ContentPresenter Grid.Column="1"
+                                      Margin="8,0,0,0"
+                                      VerticalAlignment="Center"
+                                      RecognizesAccessKey="True"
+                                      Content="{TemplateBinding Content}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}"
+                                      Foreground="{TemplateBinding Foreground}"/>
+                </Grid>
+
+                
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="CheckBox:pointerover /template/ ContentPresenter">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryForeground}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource PrimaryForeground}"/>
+    </Style>
+    <Style Selector="CheckBox:checked">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource PrimaryButtonBackgroundGradient}"></Setter>
+        <Setter Property="BorderThickness" Value="5"></Setter>
+        <Setter Property="Opacity" Value="1"/>
+    </Style>
+    <Style Selector="CheckBox:checked /template/ Path#CheckMark">
+        <Setter Property="Opacity" Value="1"/>
+    </Style>
 </Styles>

@@ -1,10 +1,7 @@
-﻿using System.Windows.Input;
-using Avalonia.Svg.Skia;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using WorkScedulerApp.Data;
 using WorkScedulerApp.Factories;
-using WorkScedulerApp.Views;
 
 namespace WorkScedulerApp.ViewModels;
 

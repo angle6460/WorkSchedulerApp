@@ -17,7 +17,7 @@
     <Application.Resources>
         
         <SolidColorBrush x:Key="PrimaryBackground">#14172D</SolidColorBrush>
-        <SolidColorBrush x:Key="PrimaryText">#CFCFCF</SolidColorBrush>
+        <SolidColorBrush x:Key="PrimaryForeground">#CFCFCF</SolidColorBrush>
         <LinearGradientBrush x:Key="PrimaryBackgroundGradient" StartPoint="0%, 0%" EndPoint="100%, 0%">
             <GradientStop Offset="0" Color="#111214"></GradientStop>
             <GradientStop Offset="1" Color="#151E3E"></GradientStop>
@@ -26,6 +26,16 @@
         <SolidColorBrush x:Key="PrimaryHover">#333B5A</SolidColorBrush>
         <SolidColorBrush x:Key="PrimaryActive">#6633dd</SolidColorBrush>
         <SolidColorBrush x:Key="PrimaryHoverText">White</SolidColorBrush>
+        
+        <LinearGradientBrush x:Key="PrimaryButtonBackgroundGradient" StartPoint="0%, 0%" EndPoint="100%, 0%">
+            <GradientStop Offset="0" Color="#00ffff"></GradientStop>
+            <GradientStop Offset="1" Color="#ff00ff"></GradientStop>
+        </LinearGradientBrush>
+        <SolidColorBrush x:Key="OutlineButtonForegroundColor">#00ffff</SolidColorBrush>
+        <LinearGradientBrush x:Key="AlertButtonBackgroundGradient" StartPoint="0%, 0%" EndPoint="100%, 0%">
+            <GradientStop Offset="0" Color="#ffff00"></GradientStop>
+            <GradientStop Offset="1" Color="#ff8800"></GradientStop>
+        </LinearGradientBrush>
         
         <FontFamily x:Key="PhosphorFill">/Assets/Font/Phosphor-Fill.ttf#Phosphor-Fill</FontFamily>
         <FontFamily x:Key="Phosphor">/Assets/Font/Phosphor.ttf#Phosphor</FontFamily>

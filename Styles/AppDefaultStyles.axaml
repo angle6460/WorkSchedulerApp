@@ -4,6 +4,11 @@
         <Border Padding="5">
             <!-- Add Controls for Previewer Here -->
             <StackPanel Background="{DynamicResource PrimaryBackgroundGradient}" Width="200" Spacing="10" >
+                <Button Content="default"/>
+                <Button Classes="Subtle" Content="subtle"/>
+                <Button Classes="Outline" Content="outline"/>
+                <Button Classes="Alert" Content="Alert" />
+                <Button Content=""/>
                 <Button HorizontalAlignment="Stretch" Classes="active">
                     <StackPanel Orientation="Horizontal">
                         <Label Classes="Icon" Content="&#xe2c2;"></Label>
@@ -24,21 +29,49 @@
         <Setter Property="Padding" Value="2 5 2 5"></Setter>
     </Style>
     
-    <Style Selector="Button">
-        
-        <Setter Property="Foreground" Value="{DynamicResource PrimaryText}"></Setter>
+    <Style Selector="Label.h2">
+        <Setter Property="Padding" Value=" 0 0 0 0"></Setter>
+        <Setter Property="FontWeight" Value="Black"/>
         <Setter Property="FontSize" Value="20"></Setter>
-        <Setter Property="Background" Value="{DynamicResource PrimaryBackground}"></Setter>
     </Style>
-    
+    <!-- button styles -->
+    <Style Selector="Button">
+        <Setter Property="FontSize" Value="20"></Setter>
+        <Setter Property="FontWeight" Value="Bold"></Setter>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryBackground}"></Setter>
+        <Setter Property="Background" Value="{DynamicResource PrimaryButtonBackgroundGradient}"></Setter>
+    </Style>
     <Style Selector="Button:pointerover /template/ ContentPresenter">
         <Setter Property="Foreground" Value="{DynamicResource PrimaryHoverText}"></Setter>
         <Setter Property="Background" Value="{DynamicResource PrimaryHover}"></Setter>
-        
+    </Style>
+    <!-- subtle button -->
+    <Style Selector="Button.Subtle">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryForeground}"></Setter>
+        <Setter Property="Background" Value="{DynamicResource PrimaryBackground}"></Setter>
+    </Style>
+    <!-- outline button -->
+    <Style Selector="Button.Outline">
+        <Setter Property="Background" Value="{DynamicResource PrimaryBackground}"></Setter>
+        <Setter Property="BorderBrush" Value="{DynamicResource PrimaryButtonBackgroundGradient}"></Setter>
+        <Setter Property="Foreground" Value="{DynamicResource OutlineButtonForegroundColor}"></Setter>
+    </Style>
+    <Style Selector="Button.Outline:pointerover /template/ ContentPresenter">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryBackground}"/>
+        <Setter Property="Background" Value="{DynamicResource PrimaryButtonBackgroundGradient}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource PrimaryButtonBackgroundGradient}"></Setter>
+    </Style>
+    <!-- alert button -->
+    <Style Selector="Button.Alert">
+        <Setter Property="Background" Value="{DynamicResource AlertButtonBackgroundGradient}"></Setter>
     </Style>
     
+    
+    <!-- Transparent button -->
     <Style Selector="Button.Transparent">
         <Setter Property="Background" Value="Transparent"></Setter>
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryForeground}"></Setter>
     </Style>
     <Style Selector="Button.Transparent:pointerover /template/ ContentPresenter">
         <Setter Property="Background" Value="Transparent"></Setter>

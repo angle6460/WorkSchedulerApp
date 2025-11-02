@@ -2,19 +2,149 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:WorkScedulerApp.ViewModels"
              xmlns:svg="clr-namespace:Avalonia.Svg.Skia;assembly=Avalonia.Svg.Skia"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="800"
              x:Class="WorkScedulerApp.Views.SettingsPageView"
+             x:DataType="vm:SettingsPageViewModel"
              Background="{DynamicResource PrimaryBackground}"
-             Foreground="{DynamicResource PrimaryBackgroundGradient}">
+             Foreground="{DynamicResource PrimaryForeground}">
+    
+    <!-- Only Affects Preview -->
+    <Design.DataContext><vm:SettingsPageViewModel></vm:SettingsPageViewModel></Design.DataContext>
     
     <Grid ColumnDefinitions="*, *" RowDefinitions="Auto, *">
         <!-- Header -->
         <Grid Name="HeaderGrid" Grid.ColumnSpan="2">
-            <svg:Svg Path="/Assets/Images/Banner.svg" />
+            <svg:Svg Path="/Assets/Images/Banner.svg" Height="140" Stretch="UniformToFill"/>
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Label HorizontalAlignment="Center" Content="Settings"></Label>
+                <Label HorizontalAlignment="Center" Content="Version 0.1.3 Beta"></Label>
+                <Label HorizontalAlignment="Center" Content="Compiled Oct 31 2025 09:14"></Label>
+            </StackPanel>
         </Grid>
-        <Grid Grid.Column="0" Grid.Row="1">
+        <!-- Left Side Content -->
+        <StackPanel Grid.Column="0" Grid.Row="1" Spacing="15" Margin="25">
+            <!-- General -->
+            <StackPanel>
+                <Label Classes="h2" Content="General"></Label>
+                <Grid ColumnDefinitions="*, 16, Auto" RowDefinitions="Auto, 16, Auto, 16, Auto">
+                    <!-- Release Licence -->
+                    <TextBlock TextWrapping="Wrap" Text="Remove licence of SchedulerApp from the machine and release the licence back to the server ready to be transferred to another machine"></TextBlock>
+                    <Button Grid.Row="0" Grid.Column="2" HorizontalAlignment="Stretch">
+                        <StackPanel Orientation="Horizontal">
+                            <Label Classes="Icon" Content="&#xe2fe;"></Label>
+                            <Label Content="Release License" ></Label>
+                        </StackPanel>
+                    </Button>
+                    
+                    <!-- Skip files -->
+                    <TextBlock Grid.Column="0" Grid.Row="2" TextWrapping="Wrap" Text="Skip files if only Open, Save (Optional) and Close are valid actions."></TextBlock>
+                    <CheckBox Grid.Column="2" Grid.Row="2"></CheckBox>
+                    
+                    <!-- Skip files -->
+                    <TextBlock Grid.Column="0" Grid.Row="4" TextWrapping="Wrap" Text="Allow duplicate entries on the same file in project lists"></TextBlock>
+                    <CheckBox Grid.Column="2" Grid.Row="4"></CheckBox>
+                </Grid>
+            </StackPanel>
             
-        </Grid>
+            <!-- Locations -->
+            <StackPanel>
+                <Label Classes="h2" Content="Locations"></Label>
+                <Grid ShowGridLines="True" ColumnDefinitions="*, Auto">
+                    <StackPanel>
+                        <TextBlock TextWrapping="Wrap" Text="Add or remove the locations to search for Reporter Templates, Macros, Actions and other custom files or templates"></TextBlock>
+                        <TextBlock TextWrapping="Wrap" Text="*All sub-directories will be search automatically"> </TextBlock>
+                    </StackPanel>
+                    <Button Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch">
+                        <StackPanel Orientation="Horizontal">
+                            <Label Classes="Icon" Content="&#xE258;"></Label>
+                            <Label Content="Add Folder" ></Label>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+                <ListBox ItemsSource="{Binding LocationPaths}">
+                    
+                </ListBox>
+            </StackPanel>
+        </StackPanel>
+        
+        <!-- Right Side Content -->
+        <StackPanel Grid.Row="1" Grid.Column="1" Spacing="15" Margin="25">
+            <!-- SolidWorks Host -->
+            <StackPanel >
+                <Label Classes="h2" Content="SolidWorks Host"></Label>
+                <TextBlock TextWrapping="Wrap">
+                    BatchProcess can work locally on the current machine, or on any machine accessable over the network
+                    or even internet.
+                    <LineBreak/><LineBreak/>
+                    Enter the machines IP address, network name or localhost for this machine.
+                </TextBlock>
+                <ComboBox></ComboBox>
+                <Label Content="Connection Established"></Label>
+            </StackPanel>
+            <!-- PDM Enterprises -->
+            <StackPanel Spacing="15">
+                <Label Classes="h2" Content="PDM Enterprises"></Label>
+                <TextBlock TextWrapping="Wrap">
+                    If you are Using PDM Enterprise enter the credentials below and test login. BatchProcess cab then
+                    automatically handle checking in and out files from pdm enterprise.
+                </TextBlock>
+                <Grid ColumnDefinitions="*, *, *">
+                    <ComboBox HorizontalAlignment="Stretch"></ComboBox>
+                    <TextBox Grid.Column="1"></TextBox>
+                    <TextBox Grid.Column="2"></TextBox>
+                </Grid>
+                <StackPanel Orientation="Horizontal">
+                    <Button HorizontalAlignment="Stretch">
+                        <StackPanel Orientation="Horizontal">
+                            <Label Classes="Icon" Content="&#xe23e;"></Label>
+                            <Label Content="Login" ></Label>
+                        </StackPanel>
+                    </Button>
+                    <Button HorizontalAlignment="Stretch">
+                        <StackPanel Orientation="Horizontal">
+                            <Label Classes="Icon" Content="&#xe094;"></Label>
+                            <Label Content="Refresh Vault" ></Label>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+                <Label Content="Connection Established"></Label>
+                
+            </StackPanel>
+            
+            <!-- Settings Cache -->
+            <StackPanel Spacing="15">
+                <Label Classes="h2" Content="Settings Cache"></Label>
+                <TextBlock TextWrapping="Wrap">
+                    Various settings are stored locally including Processes, Actions, Macros, Reports and History.
+                    <LineBreak/><LineBreak/>
+                    If you are Experiencing issues you can try clearing the cache.
+                </TextBlock>
+                <StackPanel Orientation="Horizontal">
+                    <Button HorizontalAlignment="Stretch" Classes="Alert">
+                        <StackPanel Orientation="Horizontal">
+                            <Label Classes="Icon" Content="&#xec54;"></Label>
+                            <Label Content="Clear Cache" ></Label>
+                        </StackPanel>
+                    </Button>
+                    <Button HorizontalAlignment="Stretch">
+                        <StackPanel Orientation="Horizontal">
+                            <Label Classes="Icon" Content="&#xe5de;"></Label>
+                            <Label Content="Export Cache" ></Label>
+                        </StackPanel>
+                    </Button>
+                    <Button HorizontalAlignment="Stretch">
+                        <StackPanel Orientation="Horizontal">
+                            <Label Classes="Icon" Content="&#xe20c;"></Label>
+                            <Label Content="Import Cache" ></Label>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+                
+            </StackPanel>
+            
+        </StackPanel>
+        
     </Grid>
 </UserControl>

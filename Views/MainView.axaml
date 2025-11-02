@@ -3,8 +3,9 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:svg="clr-namespace:Avalonia.Svg.Skia;assembly=Avalonia.Svg.Skia"
-        mc:Ignorable="d" d:DesignWidth="1024" d:DesignHeight="600"
-        Width="1024" Height="600"
+        mc:Ignorable="d" d:DesignWidth="1400" d:DesignHeight="800"
+        Width="1400" Height="800"
+        MinWidth="1400" MinHeight="800"
         x:Class="WorkScedulerApp.MainView"
         xmlns:vm="clr-namespace:WorkScedulerApp.ViewModels"
         xmlns:view="clr-namespace:WorkScedulerApp.Views"
@@ -24,32 +25,31 @@
                         <Grid RowDefinitions="*, Auto">
                                 <StackPanel Spacing="12">
                                         <svg:Svg Path="{Binding SideMenuImage}" Width="{Binding SideMenuSize}"  PointerPressed="InputElement_OnPointerPressed"/>
-                                        
-                                        <Button HorizontalAlignment="Stretch" Classes.active="{Binding HomePageIsActive}" Command="{Binding GoToHomeCommand}">
+                                        <Button HorizontalAlignment="Stretch" Classes="Subtle" Classes.active="{Binding HomePageIsActive}" Command="{Binding GoToHomeCommand}">
                                                 <StackPanel Orientation="Horizontal">
                                                         <Label Classes="Icon" Content="&#xe2c2;"></Label>
                                                         <Label Content="Home" IsVisible="{Binding SideMenuExpanded}"></Label>
                                                 </StackPanel>
                                         </Button>
-                                        <Button HorizontalAlignment="Stretch" Classes.active="{Binding WorkPageIsActive}" Command="{Binding GoToWorkCommand}">
+                                        <Button HorizontalAlignment="Stretch" Classes="Subtle" Classes.active="{Binding WorkPageIsActive}" Command="{Binding GoToWorkCommand}">
                                                 <StackPanel Orientation="Horizontal">
                                                         <Label Classes="Icon" Content="&#xE80E;"></Label>
                                                         <Label Content="Work" IsVisible="{Binding SideMenuExpanded}"></Label>
                                                 </StackPanel>
                                         </Button>
-                                        <Button HorizontalAlignment="Stretch" Classes.active="{Binding DailyWorkPageIsActive}" Command="{Binding GoToDailyWorkCommand}">
+                                        <Button HorizontalAlignment="Stretch" Classes="Subtle" Classes.active="{Binding DailyWorkPageIsActive}" Command="{Binding GoToDailyWorkCommand}">
                                                 <StackPanel Orientation="Horizontal">
                                                         <Label Classes="Icon" Content="&#xE7B2;"></Label>
                                                         <Label Content="Daily Work" IsVisible="{Binding SideMenuExpanded}"></Label>
                                                 </StackPanel>
                                         </Button>
-                                        <Button HorizontalAlignment="Stretch" Classes.active="{Binding WeeklyWorkPageIsActive}" Command="{Binding GoToWeeklyWorkCommand}">
+                                        <Button HorizontalAlignment="Stretch" Classes="Subtle" Classes.active="{Binding WeeklyWorkPageIsActive}" Command="{Binding GoToWeeklyWorkCommand}">
                                                 <StackPanel Orientation="Horizontal">
                                                         <Label Classes="Icon" Content="&#xE7B4;"></Label>
                                                         <Label Content="Weekly Work" IsVisible="{Binding SideMenuExpanded}"></Label>
                                                 </StackPanel>
                                         </Button>
-                                        <Button HorizontalAlignment="Stretch" Classes.active="{Binding EmployeesPageIsActive}" Command="{Binding GoToEmployeesPageCommand}">
+                                        <Button HorizontalAlignment="Stretch" Classes="Subtle" Classes.active="{Binding EmployeesPageIsActive}" Command="{Binding GoToEmployeesPageCommand}">
                                                 <StackPanel Orientation="Horizontal">
                                                         <Label Classes="Icon" Content="&#xE68C;"></Label>
                                                         <Label Content="Employees" IsVisible="{Binding SideMenuExpanded}"></Label>

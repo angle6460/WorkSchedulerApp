@@ -1,19 +1,19 @@
-﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" width="1200" height="300">
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 200" width="1200" height="200">
     <!-- Transparent background -->
-    <rect width="1200" height="300" fill="none"/>
+    <rect width="1200" height="200" fill="none"/>
 
     <!-- Left accent shape -->
-    <path d="M0 0 H420 C520 0 540 300 0 300 Z" fill="#151E3E" />
+    <path d="M0 0 H420 C520 0 540 200 0 200 Z" fill="#151E3E" />
 
     <!-- Right accent gradient -->
     <linearGradient id="rightAccent" x1="0" x2="1" y1="0" y2="0">
         <stop offset="0.6" stop-color="#3b82f6" stop-opacity="0"/>
         <stop offset="1" stop-color="#151E3E" stop-opacity="0.3"/>
     </linearGradient>
-    <rect x="800" y="0" width="400" height="300" fill="url(#rightAccent)" />
+    <rect x="800" y="0" width="400" height="200" fill="url(#rightAccent)" />
 
     <!-- Inline calendar icon -->
-    <g transform="translate(60,40) scale(0.43)">
+    <g transform="translate(60,10) scale(0.33)" opacity="0.3">
         <g stroke="#0a2540" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
             <!-- Calendar body -->
             <rect x="96" y="96" width="320" height="320" rx="32" ry="32" fill="#ffffff"/>

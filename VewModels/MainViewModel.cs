@@ -16,7 +16,7 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SideMenuImage))]
     [NotifyPropertyChangedFor(nameof(SideMenuSize))]
-    private bool _sideMenuExpanded = false;
+    private bool _sideMenuExpanded = true;
     
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HomePageIsActive))]

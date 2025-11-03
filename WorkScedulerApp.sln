@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorkScedulerApp", "WorkScedulerApp.csproj", "{C854A412-5BF7-4689-96F4-74F75795A840}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestProject1", "TestProject1\TestProject1.csproj", "{94604FB4-7DD8-4BB1-8541-0EA1A449F6A8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{C854A412-5BF7-4689-96F4-74F75795A840}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C854A412-5BF7-4689-96F4-74F75795A840}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C854A412-5BF7-4689-96F4-74F75795A840}.Release|Any CPU.Build.0 = Release|Any CPU
+		{94604FB4-7DD8-4BB1-8541-0EA1A449F6A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{94604FB4-7DD8-4BB1-8541-0EA1A449F6A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{94604FB4-7DD8-4BB1-8541-0EA1A449F6A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{94604FB4-7DD8-4BB1-8541-0EA1A449F6A8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

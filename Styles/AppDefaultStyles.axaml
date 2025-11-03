@@ -20,7 +20,7 @@
                 </StackPanel>
                 <StackPanel Width="150">
                     <CheckBox/>
-                    <CheckBox Content="Has Content"></CheckBox>
+                    <CheckBox Content="Has Content and should wrap"></CheckBox>
                     <CheckBox IsChecked="True"/>
                     <CheckBox IsChecked="True" Content="Has Content"></CheckBox>
 
@@ -103,24 +103,24 @@
     
     <!-- Checkbox styles -->
     <Style Selector="CheckBox">
-        <Setter Property="Background" Value="{DynamicResource PrimaryButtonBackgroundGradient}"/>
         <Setter Property="FontWeight" Value="Bold"/>
-        <Setter Property="FontSize" Value="20"></Setter>
+        <Setter Property="FontSize" Value="20"/>
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryForeground}"/>
         <Setter Property="Template">
             <ControlTemplate>
                 <Grid ColumnDefinitions="Auto,*" VerticalAlignment="Center" Margin="4,2">
                     <!-- Box outline -->
-                    <Border Width="20" Height="20"
+                    <Border x:Name="BoxBorder"
+                            Width="20" Height="20"
                             CornerRadius="6"
                             BorderThickness="2"
                             BorderBrush="{DynamicResource PrimaryButtonBackgroundGradient}"
                             Background="Transparent">
-                        <Path Name="CheckMark"
-                              Data="M5,8 L8,12 L12,4"
-                              Stroke="{DynamicResource PrimaryButtonBackgroundGradient}"
-                              StrokeThickness="2.5"
+                        <Path x:Name="CheckMark"
+                              Data="M5,9 L8,12 L13,4"
+                              Stroke="{DynamicResource PrimaryBackground}"
+                              StrokeThickness="4"
                               StrokeLineCap="Round"
-                              
                               Opacity="0"/>
                     </Border>
 
@@ -128,27 +128,47 @@
                     <ContentPresenter Grid.Column="1"
                                       Margin="8,0,0,0"
                                       VerticalAlignment="Center"
+                                      HorizontalAlignment="Left"
+                                      TextWrapping="Wrap"
                                       RecognizesAccessKey="True"
                                       Content="{TemplateBinding Content}"
                                       ContentTemplate="{TemplateBinding ContentTemplate}"
                                       Foreground="{TemplateBinding Foreground}"/>
                 </Grid>
-
-                
             </ControlTemplate>
         </Setter>
+    </Style>
+    
+    <Style Selector="CheckBox:checked">
+        <Setter Property="Background" Value="{DynamicResource PrimaryButtonBackgroundGradient}"/>
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryForeground}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource PrimaryButtonBackgroundGradient}"></Setter>
+        <Setter Property="BorderThickness" Value="5"></Setter>
+        <Setter Property="Opacity" Value="1"/>
+        
+    </Style>
+    <Style Selector="CheckBox:checked /template/ Border#BoxBorder">
+        <Setter Property="Background" Value="{DynamicResource PrimaryButtonBackgroundGradient}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource PrimaryButtonBackgroundGradient}"/>
+    </Style>
+    <Style Selector="CheckBox:checked /template/ Path#CheckMark">
+        <Setter Property="Opacity" Value="1"/>
+        <Setter Property="Stroke" Value="{DynamicResource PrimaryBackground}"/>
     </Style>
     <Style Selector="CheckBox:pointerover /template/ ContentPresenter">
         <Setter Property="Foreground" Value="{DynamicResource PrimaryForeground}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource PrimaryForeground}"/>
     </Style>
-    <Style Selector="CheckBox:checked">
-        <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource PrimaryButtonBackgroundGradient}"></Setter>
-        <Setter Property="BorderThickness" Value="5"></Setter>
-        <Setter Property="Opacity" Value="1"/>
+    <Style Selector="CheckBox:pointerover /template/ Border#BoxBorder">
+        <Setter Property="BorderBrush" Value="{DynamicResource PrimaryForeground}"/>
     </Style>
-    <Style Selector="CheckBox:checked /template/ Path#CheckMark">
-        <Setter Property="Opacity" Value="1"/>
+    <Style Selector="CheckBox /template/ ContentPresenter">
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Foreground" Duration="0:0:0.1"></BrushTransition>
+                <BrushTransition Property="Background" Duration="0:0:0.1"></BrushTransition>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1"></TransformOperationsTransition>
+            </Transitions>
+        </Setter>
     </Style>
 </Styles>

@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.Data.Sqlite;
+﻿using Microsoft.Data.Sqlite;
 
 namespace WorkScedulerApp.Database;
 
 public sealed class DatabaseHandler
 {
-    private static DatabaseHandler _instance;
-    private static readonly object Lock = new object();
+    private static DatabaseHandler? _instance;
+    private static readonly object Lock = new();
     private string _connectionString = @"Data Source=C:\Users\Angel\RiderProjects\WorkScedulerApp\Database\Database.db;";
 
     private DatabaseHandler()

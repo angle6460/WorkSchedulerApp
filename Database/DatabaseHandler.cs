@@ -1,24 +1,50 @@
 ﻿using System;
+using System.Collections.Generic;
 using Microsoft.Data.Sqlite;
+
 namespace WorkScedulerApp.Database;
 
 public sealed class DatabaseHandler
 {
     private static DatabaseHandler _instance;
-    
     private static readonly object Lock = new object();
-    
     private string _connectionString = @"Data Source=C:\Users\Angel\RiderProjects\WorkScedulerApp\Database\Database.db;";
-
 
     private DatabaseHandler()
     {
-        using (var connection = new SqliteConnection(_connectionString))
+        EnsureSchema(); // ensure schema for initial connection
+    }
+
+    public static DatabaseHandler Instance
+    {
+        get
         {
-            connection.Open();
-            
-            SqliteCommand createTableCommand = connection.CreateCommand();
-            createTableCommand.CommandText = @"
+            lock (Lock)
+            {
+                _instance ??= new DatabaseHandler();
+                return _instance;
+            }
+        }
+    }
+
+    // Automatically rebuild schema when connection string changes
+    public string ConnectionString
+    {
+        get => _connectionString;
+        set
+        {
+            _connectionString = value;
+            EnsureSchema();
+        }
+    }
+
+    private void EnsureSchema()
+    {
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+
+        using var createTableCommand = connection.CreateCommand();
+        createTableCommand.CommandText = @"
 -- ================================
 -- WorkLoad Base Table (Polymorphic)
 -- ================================
@@ -27,7 +53,7 @@ CREATE TABLE IF NOT EXISTS WorkLoad (
     Name TEXT NOT NULL,
     Description TEXT,
     EstimatedHours INTEGER NOT NULL,
-    WorkLoadType TEXT NOT NULL -- 'PerEmployee', 'PerItem', 'Fixed'
+    WorkLoadType TEXT NOT NULL
 );
 
 -- =====================================
@@ -69,9 +95,7 @@ CREATE TABLE IF NOT EXISTS WorkGroupWorkLoad (
     FOREIGN KEY (WorkLoadID) REFERENCES WorkLoad(WorkLoadID) ON DELETE CASCADE
 );
 
--- ==========
--- Employees
--- ==========
+-- ========== Employees ==========
 CREATE TABLE IF NOT EXISTS Employee (
     EmployeeID TEXT PRIMARY KEY,
     Name TEXT NOT NULL,
@@ -89,9 +113,7 @@ CREATE TABLE IF NOT EXISTS EmployeeSkills (
     FOREIGN KEY (WorkLoadID) REFERENCES WorkLoad(WorkLoadID) ON DELETE CASCADE
 );
 
--- ======
--- Shifts
--- ======
+-- ====== Shifts ======
 CREATE TABLE IF NOT EXISTS Shift (
     ShiftID INTEGER PRIMARY KEY AUTOINCREMENT,
     StartTime DATETIME NOT NULL,
@@ -158,29 +180,158 @@ CREATE TABLE IF NOT EXISTS EmployeeDailySchedule (
     FOREIGN KEY (DayWorkloadID) REFERENCES DayWorkload(DayWorkloadID) ON DELETE CASCADE
 );
 ";
-            createTableCommand.ExecuteNonQuery();
-        }
+        createTableCommand.ExecuteNonQuery();
+    }
+    public void Close()
+    {
+        // Force release of file handles
+        SqliteConnection.ClearAllPools();
     }
 
-    public static DatabaseHandler Instance
+    // -------------------------------
+    // Insert Methods
+    // -------------------------------
+
+    public void InsertPerEmployeeWorkLoad(string name, string description, int minutesPerEmployee, int numberOfEmployees)
     {
-        get
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+        using var transaction = connection.BeginTransaction();
+
+        try
         {
-            // Lock to ensure one thread can create the instance at a time
-            lock (Lock)
-            {
-                if (_instance is null)
-                {
-                    _instance = new DatabaseHandler();
-                }
-                return _instance;
-            }
+            var insertWorkLoad = connection.CreateCommand();
+            insertWorkLoad.CommandText = @"
+                INSERT INTO WorkLoad (Name, Description, EstimatedHours, WorkLoadType)
+                VALUES ($name, $description, $estimatedHours, 'PerEmployee');
+                SELECT last_insert_rowid();";
+            insertWorkLoad.Parameters.AddWithValue("$name", name);
+            insertWorkLoad.Parameters.AddWithValue("$description", description);
+            insertWorkLoad.Parameters.AddWithValue("$estimatedHours", (minutesPerEmployee * numberOfEmployees) / 60);
+            long workLoadId = (long)insertWorkLoad.ExecuteScalar();
+
+            var insertDetails = connection.CreateCommand();
+            insertDetails.CommandText = @"
+                INSERT INTO PerEmployeeWorkLoad (WorkLoadID, MinutesPerEmployee, NumberOfEmployees)
+                VALUES ($id, $minutesPerEmployee, $numberOfEmployees);";
+            insertDetails.Parameters.AddWithValue("$id", workLoadId);
+            insertDetails.Parameters.AddWithValue("$minutesPerEmployee", minutesPerEmployee);
+            insertDetails.Parameters.AddWithValue("$numberOfEmployees", numberOfEmployees);
+            insertDetails.ExecuteNonQuery();
+
+            transaction.Commit();
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
         }
     }
 
-    public string ConnectionString
+    public void InsertPerItemWorkLoad(string name, string description, int minutesPerItem, int numberOfItems)
     {
-        get { return _connectionString; }
-        set { _connectionString = value; }
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+        using var transaction = connection.BeginTransaction();
+
+        try
+        {
+            var insertWorkLoad = connection.CreateCommand();
+            insertWorkLoad.CommandText = @"
+                INSERT INTO WorkLoad (Name, Description, EstimatedHours, WorkLoadType)
+                VALUES ($name, $description, $estimatedHours, 'PerItem');
+                SELECT last_insert_rowid();";
+            insertWorkLoad.Parameters.AddWithValue("$name", name);
+            insertWorkLoad.Parameters.AddWithValue("$description", description);
+            insertWorkLoad.Parameters.AddWithValue("$estimatedHours", (minutesPerItem * numberOfItems) / 60);
+            long workLoadId = (long)insertWorkLoad.ExecuteScalar();
+
+            var insertDetails = connection.CreateCommand();
+            insertDetails.CommandText = @"
+                INSERT INTO PerItemWorkLoad (WorkLoadID, MinutesPerItem, NumberOfItems)
+                VALUES ($id, $minutesPerItem, $numberOfItems);";
+            insertDetails.Parameters.AddWithValue("$id", workLoadId);
+            insertDetails.Parameters.AddWithValue("$minutesPerItem", minutesPerItem);
+            insertDetails.Parameters.AddWithValue("$numberOfItems", numberOfItems);
+            insertDetails.ExecuteNonQuery();
+
+            transaction.Commit();
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
+
+    public void InsertFixedWorkLoad(string name, string description, int fixedHours)
+    {
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+        using var transaction = connection.BeginTransaction();
+
+        try
+        {
+            var insertWorkLoad = connection.CreateCommand();
+            insertWorkLoad.CommandText = @"
+                INSERT INTO WorkLoad (Name, Description, EstimatedHours, WorkLoadType)
+                VALUES ($name, $description, $estimatedHours, 'Fixed');
+                SELECT last_insert_rowid();";
+            insertWorkLoad.Parameters.AddWithValue("$name", name);
+            insertWorkLoad.Parameters.AddWithValue("$description", description);
+            insertWorkLoad.Parameters.AddWithValue("$estimatedHours", fixedHours);
+            long workLoadId = (long)insertWorkLoad.ExecuteScalar();
+
+            var insertDetails = connection.CreateCommand();
+            insertDetails.CommandText = @"
+                INSERT INTO FixedWorkLoad (WorkLoadID, FixedHours)
+                VALUES ($id, $fixedHours);";
+            insertDetails.Parameters.AddWithValue("$id", workLoadId);
+            insertDetails.Parameters.AddWithValue("$fixedHours", fixedHours);
+            insertDetails.ExecuteNonQuery();
+
+            transaction.Commit();
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
+
+    public void InsertWorkGroup(string name, List<int> workLoadIds)
+    {
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+        using var transaction = connection.BeginTransaction();
+
+        try
+        {
+            var insertGroup = connection.CreateCommand();
+            insertGroup.CommandText = @"
+                INSERT INTO WorkGroup (Name)
+                VALUES ($name);
+                SELECT last_insert_rowid();";
+            insertGroup.Parameters.AddWithValue("$name", name);
+            long workGroupId = (long)insertGroup.ExecuteScalar();
+
+            foreach (var id in workLoadIds)
+            {
+                var mapCmd = connection.CreateCommand();
+                mapCmd.CommandText = @"
+                    INSERT INTO WorkGroupWorkLoad (WorkGroupID, WorkLoadID)
+                    VALUES ($groupId, $workLoadId);";
+                mapCmd.Parameters.AddWithValue("$groupId", workGroupId);
+                mapCmd.Parameters.AddWithValue("$workLoadId", id);
+                mapCmd.ExecuteNonQuery();
+            }
+
+            transaction.Commit();
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
     }
 }

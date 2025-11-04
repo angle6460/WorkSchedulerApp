@@ -71,11 +71,11 @@
         
         <!-- Right Side Content -->
         <StackPanel Grid.Row="1" Grid.Column="1" Spacing="15" Margin="25">
-            <!-- SolidWorks Host -->
+            <!-- Scheduler Host -->
             <StackPanel >
-                <Label Classes="h2" Content="SolidWorks Host"></Label>
+                <Label Classes="h2" Content="Scheduler Host"></Label>
                 <TextBlock TextWrapping="Wrap">
-                    BatchProcess can work locally on the current machine, or on any machine accessable over the network
+                    WorkScheduler can work locally on the current machine, or on any machine accessable over the network
                     or even internet.
                     <LineBreak/><LineBreak/>
                     Enter the machines IP address, network name or localhost for this machine.
@@ -83,12 +83,12 @@
                 <ComboBox></ComboBox>
                 <Label Content="Connection Established"></Label>
             </StackPanel>
-            <!-- PDM Enterprises -->
+            <!-- Coles Enterprises -->
             <StackPanel Spacing="15">
-                <Label Classes="h2" Content="PDM Enterprises"></Label>
+                <Label Classes="h2" Content="Coles Enterprises"></Label>
                 <TextBlock TextWrapping="Wrap">
-                    If you are Using PDM Enterprise enter the credentials below and test login. BatchProcess cab then
-                    automatically handle checking in and out files from pdm enterprise.
+                    If you are using Coles Enterprise enter the credentials below and test login. WorkScheduler can then
+                    automatically handle checking in and out files from Coles enterprise.
                 </TextBlock>
                 <Grid ColumnDefinitions="*, *, *">
                     <ComboBox HorizontalAlignment="Stretch"></ComboBox>

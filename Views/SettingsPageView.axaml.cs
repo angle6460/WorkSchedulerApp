@@ -2,7 +2,7 @@
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 
-namespace WorkScedulerApp.Views;
+namespace WorkSchedulerApp.Views;
 
 public partial class SettingsPageView : UserControl
 {

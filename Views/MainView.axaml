@@ -6,11 +6,12 @@
         mc:Ignorable="d" d:DesignWidth="1400" d:DesignHeight="800"
         Width="1400" Height="800"
         MinWidth="1400" MinHeight="800"
-        x:Class="WorkScedulerApp.MainView"
-        xmlns:vm="clr-namespace:WorkScedulerApp.ViewModels"
-        xmlns:view="clr-namespace:WorkScedulerApp.Views"
+        x:Class="WorkSchedulerApp.Views.MainView"
+        xmlns:vm="clr-namespace:WorkSchedulerApp.ViewModels"
+        xmlns:view="clr-namespace:WorkSchedulerApp.Views"
+        xmlns:vewModels="clr-namespace:WorkSchedulerApp.ViewModels"
         x:DataType="vm:MainViewModel"
-        Title="WorkScedulerApp">
+        Title="WorkSchedulerApp">
         
         <!-- Only Affects Preview -->
         <Design.DataContext><vm:MainViewModel></vm:MainViewModel></Design.DataContext>

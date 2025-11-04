@@ -1,4 +1,4 @@
-﻿namespace WorkScedulerApp.Data;
+﻿namespace WorkSchedulerApp.Data;
 
 public enum ApplicationPageNames
 {

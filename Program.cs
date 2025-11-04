@@ -1,7 +1,7 @@
 ﻿using Avalonia;
 using System;
 
-namespace WorkScedulerApp;
+namespace WorkSchedulerApp;
 
 class Program
 {

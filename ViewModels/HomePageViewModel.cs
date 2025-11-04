@@ -1,6 +1,6 @@
-﻿using WorkScedulerApp.Data;
+﻿using WorkSchedulerApp.Data;
 
-namespace WorkScedulerApp.ViewModels;
+namespace WorkSchedulerApp.ViewModels;
 
 public partial class HomePageViewModel : PageViewModel
 {

@@ -1,7 +1,7 @@
 ﻿using Microsoft.Data.Sqlite;
-using WorkScedulerApp.Database;
+using WorkSchedulerApp.Database;
 
-namespace TestProject1;
+namespace WorkSchedulerApp.TestProject1;
 
 [TestFixture]
 public class DatabaseHandlerTests

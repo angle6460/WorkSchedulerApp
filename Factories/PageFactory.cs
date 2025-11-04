@@ -1,10 +1,12 @@
 ﻿using System;
-using WorkScedulerApp.Data;
-using WorkScedulerApp.ViewModels;
+using WorkSchedulerApp.ViewModels;
+using WorkSchedulerApp.Data;
+using PageViewModel = WorkSchedulerApp.ViewModels.PageViewModel;
+using VewModels_PageViewModel = WorkSchedulerApp.ViewModels.PageViewModel;
 
-namespace WorkScedulerApp.Factories;
+namespace WorkSchedulerApp.Factories;
 
-public class PageFactory(Func<ApplicationPageNames, PageViewModel> factory)
+public class PageFactory(Func<ApplicationPageNames, VewModels_PageViewModel> factory)
 {
-    public PageViewModel GetPageViewModel(ApplicationPageNames pageName) => factory.Invoke(pageName);
+    public VewModels_PageViewModel GetPageViewModel(ApplicationPageNames pageName) => factory.Invoke(pageName);
 }

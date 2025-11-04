@@ -1,8 +1,8 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="WorkScedulerApp.App"
+             x:Class="WorkSchedulerApp.App"
              RequestedThemeVariant="Default"
-             xmlns:local="clr-namespace:WorkScedulerApp">
+             xmlns:local="clr-namespace:WorkSchedulerApp">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
              
              <Application.DataTemplates>

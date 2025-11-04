@@ -2,12 +2,19 @@ using System;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using WorkScedulerApp.ViewModels;
+using WorkSchedulerApp.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
-using WorkScedulerApp.Data;
-using WorkScedulerApp.Factories;
+using WorkSchedulerApp.Data;
+using WorkSchedulerApp.Factories;
+using MainViewModel = WorkSchedulerApp.ViewModels.MainViewModel;
+using PageViewModel = WorkSchedulerApp.ViewModels.PageViewModel;
+using SettingsPageViewModel = WorkSchedulerApp.ViewModels.SettingsPageViewModel;
 
-namespace WorkScedulerApp;
+namespace WorkSchedulerApp;
+
+using MainViewModel = MainViewModel;
+using PageViewModel = PageViewModel;
+using SettingsPageViewModel = SettingsPageViewModel;
 
 public partial class App : Application
 {
@@ -48,7 +55,7 @@ public partial class App : Application
         
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            desktop.MainWindow = new MainView
+            desktop.MainWindow = new Views.MainView
             {
                 DataContext = services.GetRequiredService<MainViewModel>()
             };

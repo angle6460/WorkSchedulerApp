@@ -1,6 +1,6 @@
 ﻿using Microsoft.Data.Sqlite;
 
-namespace WorkScedulerApp.Database;
+namespace WorkSchedulerApp.Database;
 
 public sealed class DatabaseHandler
 {

@@ -21,7 +21,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\WorkScedulerApp.csproj" />
+      <ProjectReference Include="..\WorkSchedulerApp.csproj" />
     </ItemGroup>
 
 </Project>

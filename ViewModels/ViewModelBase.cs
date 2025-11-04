@@ -1,6 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace WorkScedulerApp.ViewModels;
+namespace WorkSchedulerApp.ViewModels;
 
 public class ViewModelBase : ObservableObject
 {

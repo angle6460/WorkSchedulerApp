@@ -1,9 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using WorkScedulerApp.Data;
-using WorkScedulerApp.Factories;
+using WorkSchedulerApp.Data;
+using WorkSchedulerApp.Factories;
 
-namespace WorkScedulerApp.ViewModels;
+namespace WorkSchedulerApp.ViewModels;
 
 public partial class MainViewModel : ViewModelBase
 {

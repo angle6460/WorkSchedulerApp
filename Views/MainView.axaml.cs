@@ -1,8 +1,9 @@
 using Avalonia.Controls;
 using Avalonia.Input;
-using WorkScedulerApp.ViewModels;
+using WorkSchedulerApp.ViewModels;
+using MainViewModel = WorkSchedulerApp.ViewModels.MainViewModel;
 
-namespace WorkScedulerApp;
+namespace WorkSchedulerApp.Views;
 
 public partial class MainView : Window
 {

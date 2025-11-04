@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace WorkScedulerApp.Models.WorkLoads;
+namespace WorkSchedulerApp.Models.WorkLoads;
 
 public interface IWorkLoad
 {

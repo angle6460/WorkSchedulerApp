@@ -1,10 +1,10 @@
 ﻿using System;
 using Avalonia.Controls.Templates;
 using Avalonia.Controls;
-using WorkScedulerApp.ViewModels;
-using WorkScedulerApp.Views;
+using WorkSchedulerApp.ViewModels;
 
-namespace WorkScedulerApp;
+
+namespace WorkSchedulerApp;
 
 public class ViewLocator : IDataTemplate
 {

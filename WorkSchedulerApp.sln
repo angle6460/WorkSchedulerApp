@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorkScedulerApp", "WorkScedulerApp.csproj", "{C854A412-5BF7-4689-96F4-74F75795A840}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorkSchedulerApp", "WorkSchedulerApp.csproj", "{C854A412-5BF7-4689-96F4-74F75795A840}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestProject1", "TestProject1\TestProject1.csproj", "{94604FB4-7DD8-4BB1-8541-0EA1A449F6A8}"
 EndProject

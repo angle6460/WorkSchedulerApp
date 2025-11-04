@@ -6,11 +6,11 @@ public sealed class DatabaseHandler
 {
     private static DatabaseHandler? _instance;
     private static readonly object Lock = new();
-    private string _connectionString = @"Data Source=C:\Users\Angel\RiderProjects\WorkScedulerApp\Database\Database.db;";
+    private string _connectionString = @"Data Source=C:\Users\Angel\RiderProjects\WorkSchedulerApp\Database\Database.db;";
 
     private DatabaseHandler()
     {
-        EnsureSchema(); // ensure schema for initial connection
+        EnsureSchema();
     }
 
     public static DatabaseHandler Instance
@@ -25,7 +25,6 @@ public sealed class DatabaseHandler
         }
     }
 
-    // Automatically rebuild schema when connection string changes
     public string ConnectionString
     {
         get => _connectionString;
@@ -36,10 +35,20 @@ public sealed class DatabaseHandler
         }
     }
 
+    // Helper for connection reuse
+    private SqliteConnection OpenConnection()
+    {
+        var conn = new SqliteConnection(_connectionString);
+        conn.Open();
+        return conn;
+    }
+
+    // ---------------------------------------------------------------------
+    // Schema Creation
+    // ---------------------------------------------------------------------
     private void EnsureSchema()
     {
-        using var connection = new SqliteConnection(_connectionString);
-        connection.Open();
+        using var connection = OpenConnection();
 
         using var createTableCommand = connection.CreateCommand();
         createTableCommand.CommandText = @"
@@ -180,20 +189,18 @@ CREATE TABLE IF NOT EXISTS EmployeeDailySchedule (
 ";
         createTableCommand.ExecuteNonQuery();
     }
+
     public void Close()
     {
-        // Force release of file handles
         SqliteConnection.ClearAllPools();
     }
 
-    // -------------------------------
+    // ---------------------------------------------------------------------
     // Insert Methods
-    // -------------------------------
-
+    // ---------------------------------------------------------------------
     public void InsertPerEmployeeWorkLoad(string name, string description, int minutesPerEmployee, int numberOfEmployees)
     {
-        using var connection = new SqliteConnection(_connectionString);
-        connection.Open();
+        using var connection = OpenConnection();
         using var transaction = connection.BeginTransaction();
 
         try
@@ -228,8 +235,7 @@ CREATE TABLE IF NOT EXISTS EmployeeDailySchedule (
 
     public void InsertPerItemWorkLoad(string name, string description, int minutesPerItem, int numberOfItems)
     {
-        using var connection = new SqliteConnection(_connectionString);
-        connection.Open();
+        using var connection = OpenConnection();
         using var transaction = connection.BeginTransaction();
 
         try
@@ -264,8 +270,7 @@ CREATE TABLE IF NOT EXISTS EmployeeDailySchedule (
 
     public void InsertFixedWorkLoad(string name, string description, int fixedHours)
     {
-        using var connection = new SqliteConnection(_connectionString);
-        connection.Open();
+        using var connection = OpenConnection();
         using var transaction = connection.BeginTransaction();
 
         try
@@ -299,8 +304,7 @@ CREATE TABLE IF NOT EXISTS EmployeeDailySchedule (
 
     public void InsertWorkGroup(string name, List<int> workLoadIds)
     {
-        using var connection = new SqliteConnection(_connectionString);
-        connection.Open();
+        using var connection = OpenConnection();
         using var transaction = connection.BeginTransaction();
 
         try
@@ -332,92 +336,79 @@ CREATE TABLE IF NOT EXISTS EmployeeDailySchedule (
             throw;
         }
     }
-    
-    // -------------------------------
-// View / Query Commands
-// -------------------------------
 
-public List<(int id, string name, string type)> GetAllWorkLoads()
-{
-    var result = new List<(int, string, string)>();
-    using var connection = new SqliteConnection(_connectionString);
-    connection.Open();
-
-    var cmd = connection.CreateCommand();
-    cmd.CommandText = "SELECT WorkLoadID, Name, WorkLoadType FROM WorkLoad;";
-    using var reader = cmd.ExecuteReader();
-    while (reader.Read())
+    // ---------------------------------------------------------------------
+    // View / Query Commands
+    // ---------------------------------------------------------------------
+    public List<(int id, string name, string type)> GetAllWorkLoads()
     {
-        result.Add((reader.GetInt32(0), reader.GetString(1), reader.GetString(2)));
+        var result = new List<(int, string, string)>();
+        using var connection = OpenConnection();
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT WorkLoadID, Name, WorkLoadType FROM WorkLoad;";
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            result.Add((reader.GetInt32(0), reader.GetString(1), reader.GetString(2)));
+        }
+        return result;
     }
 
-    return result;
-}
-
-public (string name, string description, int estimatedHours, string type)? GetWorkLoadById(int id)
-{
-    using var connection = new SqliteConnection(_connectionString);
-    connection.Open();
-
-    var cmd = connection.CreateCommand();
-    cmd.CommandText = @"
-        SELECT Name, Description, EstimatedHours, WorkLoadType
-        FROM WorkLoad
-        WHERE WorkLoadID = $id;";
-    cmd.Parameters.AddWithValue("$id", id);
-
-    using var reader = cmd.ExecuteReader();
-    if (reader.Read())
+    public (string name, string description, int estimatedHours, string type)? GetWorkLoadById(int id)
     {
-        return (
-            reader.GetString(0),
-            reader.IsDBNull(1) ? "" : reader.GetString(1),
-            reader.GetInt32(2),
-            reader.GetString(3)
-        );
+        using var connection = OpenConnection();
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+            SELECT Name, Description, EstimatedHours, WorkLoadType
+            FROM WorkLoad
+            WHERE WorkLoadID = $id;";
+        cmd.Parameters.AddWithValue("$id", id);
+
+        using var reader = cmd.ExecuteReader();
+        if (reader.Read())
+        {
+            return (
+                reader.GetString(0),
+                reader.IsDBNull(1) ? "" : reader.GetString(1),
+                reader.GetInt32(2),
+                reader.GetString(3)
+            );
+        }
+
+        return null;
     }
 
-    return null;
-}
-
-public List<(int id, string name)> GetAllWorkGroups()
-{
-    var result = new List<(int, string)>();
-    using var connection = new SqliteConnection(_connectionString);
-    connection.Open();
-
-    var cmd = connection.CreateCommand();
-    cmd.CommandText = "SELECT WorkGroupID, Name FROM WorkGroup;";
-    using var reader = cmd.ExecuteReader();
-    while (reader.Read())
+    public List<(int id, string name)> GetAllWorkGroups()
     {
-        result.Add((reader.GetInt32(0), reader.GetString(1)));
+        var result = new List<(int, string)>();
+        using var connection = OpenConnection();
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT WorkGroupID, Name FROM WorkGroup;";
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            result.Add((reader.GetInt32(0), reader.GetString(1)));
+        }
+        return result;
     }
 
-    return result;
-}
-
-public List<(int workLoadId, string workLoadName)> GetWorkLoadsForGroup(int workGroupId)
-{
-    var result = new List<(int, string)>();
-    using var connection = new SqliteConnection(_connectionString);
-    connection.Open();
-
-    var cmd = connection.CreateCommand();
-    cmd.CommandText = @"
-        SELECT wl.WorkLoadID, wl.Name
-        FROM WorkLoad wl
-        JOIN WorkGroupWorkLoad gwl ON wl.WorkLoadID = gwl.WorkLoadID
-        WHERE gwl.WorkGroupID = $groupId;";
-    cmd.Parameters.AddWithValue("$groupId", workGroupId);
-
-    using var reader = cmd.ExecuteReader();
-    while (reader.Read())
+    public List<(int workLoadId, string workLoadName)> GetWorkLoadsForGroup(int workGroupId)
     {
-        result.Add((reader.GetInt32(0), reader.GetString(1)));
+        var result = new List<(int, string)>();
+        using var connection = OpenConnection();
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+            SELECT wl.WorkLoadID, wl.Name
+            FROM WorkLoad wl
+            JOIN WorkGroupWorkLoad gwl ON wl.WorkLoadID = gwl.WorkLoadID
+            WHERE gwl.WorkGroupID = $groupId;";
+        cmd.Parameters.AddWithValue("$groupId", workGroupId);
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            result.Add((reader.GetInt32(0), reader.GetString(1)));
+        }
+        return result;
     }
-
-    return result;
-}
-
 }

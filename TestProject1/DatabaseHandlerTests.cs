@@ -6,19 +6,19 @@ namespace WorkSchedulerApp.TestProject1;
 [TestFixture]
 public class DatabaseHandlerTests
 {
-    private string _testDbPath;
+    private string _testDbPath = string.Empty;
 
     [OneTimeSetUp]
     public void GlobalSetup()
     {
-        // Get the base directory of the test assembly (e.g. TestProject1/bin/Debug/net9.0)
+        // Base directory of test binaries
         var baseDir = AppDomain.CurrentDomain.BaseDirectory;
 
-        // Create a "TestDB" folder next to the test binaries
+        // Create a "TestDB" folder next to the binaries
         var testDbDir = Path.Combine(baseDir, "TestDB");
         Directory.CreateDirectory(testDbDir);
 
-        // Create a unique DB file inside TestDB
+        // Create a unique DB file for this test session
         _testDbPath = Path.Combine(testDbDir, $"TestDB_{Guid.NewGuid()}.db");
         Console.WriteLine($"[TEST DB PATH] {_testDbPath}");
 
@@ -34,9 +34,8 @@ public class DatabaseHandlerTests
         Assert.That(File.Exists(_testDbPath), Is.True, "Database file should exist after schema creation.");
     }
 
-
     // ------------------------------------------------------------
-    // Insert Tests
+    // Core Insert Tests
     // ------------------------------------------------------------
 
     [Test]
@@ -113,7 +112,7 @@ public class DatabaseHandlerTests
     }
 
     // ------------------------------------------------------------
-    // View Tests
+    // View / Retrieval Tests
     // ------------------------------------------------------------
 
     [Test]
@@ -203,6 +202,24 @@ public class DatabaseHandlerTests
     }
 
     // ------------------------------------------------------------
+    // Foreign-Key Enforcement Test (Option 2)
+    // ------------------------------------------------------------
+
+    [Test]
+    public void Test_ForeignKeys_AreEnabled()
+    {
+        var db = DatabaseHandler.Instance;
+
+        using var conn = new SqliteConnection(db.ConnectionString);
+        conn.Open();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "PRAGMA foreign_keys;";
+        int result = Convert.ToInt32(cmd.ExecuteScalar());
+
+        Assert.That(result, Is.EqualTo(1), "Foreign key enforcement should be ON.");
+    }
+
+    // ------------------------------------------------------------
     // Cleanup
     // ------------------------------------------------------------
 
@@ -210,8 +227,5 @@ public class DatabaseHandlerTests
     public void Cleanup()
     {
         DatabaseHandler.Instance.Close();
-        
-        
     }
-
 }

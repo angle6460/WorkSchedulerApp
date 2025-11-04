@@ -1,9 +1,5 @@
-﻿using NUnit.Framework;
+﻿using Microsoft.Data.Sqlite;
 using WorkScedulerApp.Database;
-using System;
-using System.IO;
-using System.Collections.Generic;
-using Microsoft.Data.Sqlite;
 
 namespace TestProject1;
 
@@ -15,17 +11,29 @@ public class DatabaseHandlerTests
     [OneTimeSetUp]
     public void GlobalSetup()
     {
-        // Create a temp DB file
-        _testDbPath = Path.Combine(Path.GetTempPath(), $"TestDB_{Guid.NewGuid()}.db");
+        // Get the base directory of the test assembly (e.g. TestProject1/bin/Debug/net9.0)
+        var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+
+        // Create a "TestDB" folder next to the test binaries
+        var testDbDir = Path.Combine(baseDir, "TestDB");
+        Directory.CreateDirectory(testDbDir);
+
+        // Create a unique DB file inside TestDB
+        _testDbPath = Path.Combine(testDbDir, $"TestDB_{Guid.NewGuid()}.db");
         Console.WriteLine($"[TEST DB PATH] {_testDbPath}");
+
+        if (File.Exists(_testDbPath))
+            File.Delete(_testDbPath);
+
         var connectionString = $"Data Source={_testDbPath};";
 
-        // Configure the singleton connection (auto-creates schema)
+        // Configure singleton and trigger schema creation
         var dbHandler = DatabaseHandler.Instance;
         dbHandler.ConnectionString = connectionString;
 
         Assert.That(File.Exists(_testDbPath), Is.True, "Database file should exist after schema creation.");
     }
+
 
     // ------------------------------------------------------------
     // Insert Tests
@@ -202,13 +210,8 @@ public class DatabaseHandlerTests
     public void Cleanup()
     {
         DatabaseHandler.Instance.Close();
-
-        Console.WriteLine($"Inspect DB at: {_testDbPath}");
-        Console.WriteLine("Press ENTER to delete...");
-        Console.ReadLine(); // wait to inspect db before deleting
-
-        if (File.Exists(_testDbPath))
-            File.Delete(_testDbPath);
+        
+        
     }
 
 }

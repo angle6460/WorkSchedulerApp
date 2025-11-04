@@ -5,6 +5,7 @@ namespace WorkSchedulerApp.Models.WorkLoads;
 
 public interface IWorkLoad
 {
+    int WorkLoadId { get; set; }
     string Name { get; set; }
 
     double CalculateHours();

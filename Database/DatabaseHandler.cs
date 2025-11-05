@@ -781,4 +781,126 @@ CREATE TABLE IF NOT EXISTS EmployeeDailySchedule (
             throw;
         }
     }
+    // ---------------------------------------------------------------------
+    // Shift and Break Operations
+    // ---------------------------------------------------------------------
+
+    public int InsertShift(DateTime startTime, DateTime endTime)
+    {
+        using var connection = OpenConnection();
+        using var transaction = connection.BeginTransaction();
+
+        try
+        {
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+                INSERT INTO Shift (StartTime, EndTime)
+                VALUES ($start, $end);
+                SELECT last_insert_rowid();";
+            cmd.Parameters.AddWithValue("$start", startTime);
+            cmd.Parameters.AddWithValue("$end", endTime);
+            long shiftId = (long)cmd.ExecuteScalar();
+
+            transaction.Commit();
+            return (int)shiftId;
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
+
+    public void AddBreakToShift(int shiftId, DateTime breakTime)
+    {
+        using var connection = OpenConnection();
+        using var transaction = connection.BeginTransaction();
+
+        try
+        {
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+                INSERT INTO ShiftBreak (ShiftID, BreakTime)
+                VALUES ($shiftId, $breakTime);";
+            cmd.Parameters.AddWithValue("$shiftId", shiftId);
+            cmd.Parameters.AddWithValue("$breakTime", breakTime);
+            cmd.ExecuteNonQuery();
+
+            transaction.Commit();
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
+
+    public (int id, DateTime start, DateTime end, List<DateTime> breaks)? GetShiftById(int shiftId)
+    {
+        using var connection = OpenConnection();
+
+        // Main shift record
+        var shiftCmd = connection.CreateCommand();
+        shiftCmd.CommandText = "SELECT ShiftID, StartTime, EndTime FROM Shift WHERE ShiftID = $id;";
+        shiftCmd.Parameters.AddWithValue("$id", shiftId);
+
+        using var reader = shiftCmd.ExecuteReader();
+        if (!reader.Read()) return null;
+
+        var id = reader.GetInt32(0);
+        var start = reader.GetDateTime(1);
+        var end = reader.GetDateTime(2);
+
+        // Get breaks
+        var breaks = new List<DateTime>();
+        var breakCmd = connection.CreateCommand();
+        breakCmd.CommandText = "SELECT BreakTime FROM ShiftBreak WHERE ShiftID = $id;";
+        breakCmd.Parameters.AddWithValue("$id", shiftId);
+        using var breakReader = breakCmd.ExecuteReader();
+        while (breakReader.Read())
+        {
+            breaks.Add(breakReader.GetDateTime(0));
+        }
+
+        return (id, start, end, breaks);
+    }
+
+    public List<(int id, DateTime start, DateTime end)> GetAllShifts()
+    {
+        var result = new List<(int, DateTime, DateTime)>();
+        using var connection = OpenConnection();
+
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT ShiftID, StartTime, EndTime FROM Shift;";
+        using var reader = cmd.ExecuteReader();
+
+        while (reader.Read())
+        {
+            result.Add((reader.GetInt32(0), reader.GetDateTime(1), reader.GetDateTime(2)));
+        }
+
+        return result;
+    }
+
+    public void DeleteShift(int shiftId)
+    {
+        using var connection = OpenConnection();
+        using var transaction = connection.BeginTransaction();
+
+        try
+        {
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = "DELETE FROM Shift WHERE ShiftID = $id;";
+            cmd.Parameters.AddWithValue("$id", shiftId);
+            cmd.ExecuteNonQuery();
+
+            transaction.Commit();
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
+
 }

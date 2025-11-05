@@ -197,6 +197,17 @@ CREATE TABLE IF NOT EXISTS EmployeeDailySchedule (
     FOREIGN KEY (WeeklyScheduleID) REFERENCES WeeklySchedule(WeeklyScheduleID) ON DELETE CASCADE,
     FOREIGN KEY (DayWorkloadID) REFERENCES DayWorkload(DayWorkloadID) ON DELETE CASCADE
 );
+-- =====================
+-- Day Schedule (Actual daily plans under WeeklySchedule)
+-- =====================
+CREATE TABLE IF NOT EXISTS DaySchedule (
+    DayScheduleID INTEGER PRIMARY KEY AUTOINCREMENT,
+    WeeklyScheduleID INTEGER NOT NULL,
+    ScheduleDate DATE NOT NULL,
+    DayWorkloadID INTEGER,
+    FOREIGN KEY (WeeklyScheduleID) REFERENCES WeeklySchedule(WeeklyScheduleID) ON DELETE CASCADE,
+    FOREIGN KEY (DayWorkloadID) REFERENCES DayWorkload(DayWorkloadID)
+);
 ";
         createTableCommand.ExecuteNonQuery();
     }
@@ -1071,7 +1082,7 @@ CREATE TABLE IF NOT EXISTS EmployeeDailySchedule (
         return Convert.ToInt32(cmd.ExecuteScalar());
     }
     // ---------------------------------------------------------------------
-    // Weekly Schedule Cloning (from WeeklyWorkload Template)
+    // Weekly Schedule Cloning (from WeeklyWorkload Template + DaySchedule auto-generation)
     // ---------------------------------------------------------------------
     public int CloneWeeklyWorkloadToSchedule(int weeklyWorkloadId, DateTime weekStart, DateTime weekEnd)
     {
@@ -1091,7 +1102,7 @@ CREATE TABLE IF NOT EXISTS EmployeeDailySchedule (
             insertSchedule.Parameters.AddWithValue("$template", weeklyWorkloadId);
             long newScheduleId = (long)insertSchedule.ExecuteScalar();
 
-            // STEP 2: Read all DayWorkloads for the given WeeklyWorkload
+            // STEP 2: Get all DayWorkloads for this WeeklyWorkload
             var getDays = connection.CreateCommand();
             getDays.CommandText = @"
                 SELECT DayWorkloadID, Day
@@ -1106,8 +1117,8 @@ CREATE TABLE IF NOT EXISTS EmployeeDailySchedule (
                     daysToClone.Add((reader.GetInt32(0), reader.GetString(1)));
             }
 
-            // STEP 3: Create cloned DayWorkloads linked to the new schedule
-            var newDayMap = new Dictionary<int, int>(); // oldDayId → newDayId
+            // STEP 3: Create cloned DayWorkloads linked to the template (deep copy)
+            var newDayMap = new Dictionary<int, int>();
             foreach (var (oldDayId, dayName) in daysToClone)
             {
                 var insertDay = connection.CreateCommand();
@@ -1116,7 +1127,7 @@ CREATE TABLE IF NOT EXISTS EmployeeDailySchedule (
                     VALUES ($day, $wk);
                     SELECT last_insert_rowid();";
                 insertDay.Parameters.AddWithValue("$day", dayName);
-                insertDay.Parameters.AddWithValue("$wk", weeklyWorkloadId); // Still references same template
+                insertDay.Parameters.AddWithValue("$wk", weeklyWorkloadId);
                 int newDayId = Convert.ToInt32(insertDay.ExecuteScalar());
                 newDayMap[oldDayId] = newDayId;
             }
@@ -1135,6 +1146,30 @@ CREATE TABLE IF NOT EXISTS EmployeeDailySchedule (
                 mapCmd.ExecuteNonQuery();
             }
 
+            // STEP 5: Auto-generate 7 DaySchedule entries (Mon–Sun)
+            for (int i = 0; i < 7; i++)
+            {
+                DateTime date = weekStart.AddDays(i);
+
+                // Try to match a DayWorkload by name (e.g., "Monday", "Tuesday")
+                string weekdayName = date.DayOfWeek.ToString();
+                int? matchingWorkloadId = newDayMap
+                    .Where(d => d.Value > 0 && 
+                                daysToClone.Any(o => o.oldId == d.Key && 
+                                string.Equals(o.dayName, weekdayName, StringComparison.OrdinalIgnoreCase)))
+                    .Select(d => (int?)d.Value)
+                    .FirstOrDefault();
+
+                var insertScheduleDay = connection.CreateCommand();
+                insertScheduleDay.CommandText = @"
+                    INSERT INTO DaySchedule (WeeklyScheduleID, ScheduleDate, DayWorkloadID)
+                    VALUES ($schedule, $date, $workload);";
+                insertScheduleDay.Parameters.AddWithValue("$schedule", newScheduleId);
+                insertScheduleDay.Parameters.AddWithValue("$date", date);
+                insertScheduleDay.Parameters.AddWithValue("$workload", (object?)matchingWorkloadId ?? DBNull.Value);
+                insertScheduleDay.ExecuteNonQuery();
+            }
+
             transaction.Commit();
             return (int)newScheduleId;
         }
@@ -1144,4 +1179,77 @@ CREATE TABLE IF NOT EXISTS EmployeeDailySchedule (
             throw;
         }
     }
+    // ---------------------------------------------------------------------
+    // DaySchedule Operations
+    // ---------------------------------------------------------------------
+
+    public int InsertDaySchedule(int weeklyScheduleId, DateTime scheduleDate, int? dayWorkloadId = null)
+    {
+        using var connection = OpenConnection();
+        using var transaction = connection.BeginTransaction();
+        try
+        {
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+                INSERT INTO DaySchedule (WeeklyScheduleID, ScheduleDate, DayWorkloadID)
+                VALUES ($scheduleId, $date, $workload);
+                SELECT last_insert_rowid();";
+            cmd.Parameters.AddWithValue("$scheduleId", weeklyScheduleId);
+            cmd.Parameters.AddWithValue("$date", scheduleDate);
+            cmd.Parameters.AddWithValue("$workload", (object?)dayWorkloadId ?? DBNull.Value);
+            long id = (long)cmd.ExecuteScalar();
+            transaction.Commit();
+            return (int)id;
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
+
+    public List<(int id, int weeklyScheduleId, DateTime date, int? dayWorkloadId)> GetDaySchedules(int weeklyScheduleId)
+    {
+        var result = new List<(int, int, DateTime, int?)>();
+        using var connection = OpenConnection();
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+            SELECT DayScheduleID, WeeklyScheduleID, ScheduleDate, DayWorkloadID
+            FROM DaySchedule
+            WHERE WeeklyScheduleID = $id
+            ORDER BY ScheduleDate;";
+        cmd.Parameters.AddWithValue("$id", weeklyScheduleId);
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            result.Add((
+                reader.GetInt32(0),
+                reader.GetInt32(1),
+                reader.GetDateTime(2),
+                reader.IsDBNull(3) ? null : reader.GetInt32(3)
+            ));
+        }
+        return result;
+    }
+
+    public void DeleteDaySchedule(int dayScheduleId)
+    {
+        using var connection = OpenConnection();
+        using var transaction = connection.BeginTransaction();
+        try
+        {
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = "DELETE FROM DaySchedule WHERE DayScheduleID = $id;";
+            cmd.Parameters.AddWithValue("$id", dayScheduleId);
+            cmd.ExecuteNonQuery();
+            transaction.Commit();
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
+
 }

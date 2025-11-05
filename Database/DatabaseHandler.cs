@@ -902,5 +902,173 @@ CREATE TABLE IF NOT EXISTS EmployeeDailySchedule (
             throw;
         }
     }
+    // ---------------------------------------------------------------------
+    // Weekly Schedule Management
+    // ---------------------------------------------------------------------
+
+    public int InsertWeeklySchedule(DateTime weekStart, DateTime weekEnd, int? weeklyWorkloadId = null)
+    {
+        using var connection = OpenConnection();
+        using var transaction = connection.BeginTransaction();
+
+        try
+        {
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+                INSERT INTO WeeklySchedule (WeekStart, WeekEnd, WeeklyWorkloadID)
+                VALUES ($start, $end, $template);
+                SELECT last_insert_rowid();";
+            cmd.Parameters.AddWithValue("$start", weekStart);
+            cmd.Parameters.AddWithValue("$end", weekEnd);
+            cmd.Parameters.AddWithValue("$template", (object?)weeklyWorkloadId ?? DBNull.Value);
+
+            long scheduleId = (long)cmd.ExecuteScalar();
+            transaction.Commit();
+            return (int)scheduleId;
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
+
+    public void AssignEmployeeToSchedule(int weeklyScheduleId, string employeeId)
+    {
+        using var connection = OpenConnection();
+        using var transaction = connection.BeginTransaction();
+
+        try
+        {
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+                INSERT INTO EmployeeWeeklySchedule (WeeklyScheduleID, EmployeeID)
+                VALUES ($schedule, $employee);";
+            cmd.Parameters.AddWithValue("$schedule", weeklyScheduleId);
+            cmd.Parameters.AddWithValue("$employee", employeeId);
+            cmd.ExecuteNonQuery();
+
+            transaction.Commit();
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
+
+    public void AssignEmployeeToDayWorkload(string employeeId, int weeklyScheduleId, int dayWorkloadId)
+    {
+        using var connection = OpenConnection();
+        using var transaction = connection.BeginTransaction();
+
+        try
+        {
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+                INSERT INTO EmployeeDailySchedule (EmployeeID, WeeklyScheduleID, DayWorkloadID)
+                VALUES ($employee, $schedule, $day);";
+            cmd.Parameters.AddWithValue("$employee", employeeId);
+            cmd.Parameters.AddWithValue("$schedule", weeklyScheduleId);
+            cmd.Parameters.AddWithValue("$day", dayWorkloadId);
+            cmd.ExecuteNonQuery();
+
+            transaction.Commit();
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
+
+    public List<(int id, DateTime start, DateTime end, int? workloadTemplateId)> GetAllWeeklySchedules()
+    {
+        var result = new List<(int, DateTime, DateTime, int?)>();
+        using var connection = OpenConnection();
+
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT WeeklyScheduleID, WeekStart, WeekEnd, WeeklyWorkloadID FROM WeeklySchedule;";
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            result.Add((
+                reader.GetInt32(0),
+                reader.GetDateTime(1),
+                reader.GetDateTime(2),
+                reader.IsDBNull(3) ? null : reader.GetInt32(3)
+            ));
+        }
+
+        return result;
+    }
+
+    public List<string> GetEmployeesForSchedule(int weeklyScheduleId)
+    {
+        var result = new List<string>();
+        using var connection = OpenConnection();
+
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+            SELECT e.Name
+            FROM Employee e
+            JOIN EmployeeWeeklySchedule es ON e.EmployeeID = es.EmployeeID
+            WHERE es.WeeklyScheduleID = $id;";
+        cmd.Parameters.AddWithValue("$id", weeklyScheduleId);
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            result.Add(reader.GetString(0));
+        }
+
+        return result;
+    }
+
+    public List<(string employeeId, int dayWorkloadId)> GetEmployeeDayAssignments(int weeklyScheduleId)
+    {
+        var result = new List<(string, int)>();
+        using var connection = OpenConnection();
+
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+            SELECT EmployeeID, DayWorkloadID
+            FROM EmployeeDailySchedule
+            WHERE WeeklyScheduleID = $id;";
+        cmd.Parameters.AddWithValue("$id", weeklyScheduleId);
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            result.Add((reader.GetString(0), reader.GetInt32(1)));
+        }
+
+        return result;
+    }
+    public int InsertWeeklyWorkloadTemplate(string name, string description)
+    {
+        using var connection = OpenConnection();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+        INSERT INTO WeeklyWorkload (Name, Description)
+        VALUES ($name, $desc);
+        SELECT last_insert_rowid();";
+        cmd.Parameters.AddWithValue("$name", name);
+        cmd.Parameters.AddWithValue("$desc", description);
+        return Convert.ToInt32(cmd.ExecuteScalar());
+    }
+
+    public int InsertDayWorkload(string day, int weeklyWorkloadId)
+    {
+        using var connection = OpenConnection();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+        INSERT INTO DayWorkload (Day, WeeklyWorkloadID)
+        VALUES ($day, $wkId);
+        SELECT last_insert_rowid();";
+        cmd.Parameters.AddWithValue("$day", day);
+        cmd.Parameters.AddWithValue("$wkId", weeklyWorkloadId);
+        return Convert.ToInt32(cmd.ExecuteScalar());
+    }
 
 }

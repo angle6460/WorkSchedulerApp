@@ -28,8 +28,8 @@ public class DatabaseHandlerTests
         var connectionString = $"Data Source={_testDbPath};";
 
         // Configure singleton and trigger schema creation
-        var dbHandler = DatabaseHandler.Instance;
-        dbHandler.ConnectionString = connectionString;
+        var dbHandler = DatabaseHandler.Instance.Initialize(connectionString);
+        // dbHandler.ConnectionString = connectionString; not needed now
 
         Assert.That(File.Exists(_testDbPath), Is.True, "Database file should exist after schema creation.");
     }

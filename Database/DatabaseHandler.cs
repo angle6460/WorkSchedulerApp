@@ -5,12 +5,13 @@ namespace WorkSchedulerApp.Database;
 public sealed class DatabaseHandler
 {
     private static DatabaseHandler? _instance;
-    private static readonly object Lock = new();
-    private string _connectionString = @"Data Source=C:\Users\Angel\RiderProjects\WorkSchedulerApp\Database\Database.db;";
+    private static readonly Lock Lock = new();
+    private string _connectionString = @"UNKNOWN";
 
     private DatabaseHandler()
     {
-        EnsureSchema();
+        // not needed here anymore 
+        // EnsureSchema();
     }
 
     public static DatabaseHandler Instance
@@ -23,6 +24,12 @@ public sealed class DatabaseHandler
                 return _instance;
             }
         }
+    }
+
+    public DatabaseHandler Initialize(string connectionString)
+    {
+        ConnectionString  = connectionString; // Also EnsuresSchema
+        return Instance;
     }
 
     public string ConnectionString
@@ -38,6 +45,10 @@ public sealed class DatabaseHandler
     // Helper for connection reuse
     private SqliteConnection OpenConnection()
     {
+        if (_connectionString == "UNKNOWN")
+        {
+            throw new InvalidOperationException("Cannot connect to SQL Server");
+        }
         var conn = new SqliteConnection(_connectionString);
         conn.Open();
         return conn;

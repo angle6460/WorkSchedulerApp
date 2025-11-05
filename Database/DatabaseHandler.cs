@@ -1070,5 +1070,78 @@ CREATE TABLE IF NOT EXISTS EmployeeDailySchedule (
         cmd.Parameters.AddWithValue("$wkId", weeklyWorkloadId);
         return Convert.ToInt32(cmd.ExecuteScalar());
     }
+    // ---------------------------------------------------------------------
+    // Weekly Schedule Cloning (from WeeklyWorkload Template)
+    // ---------------------------------------------------------------------
+    public int CloneWeeklyWorkloadToSchedule(int weeklyWorkloadId, DateTime weekStart, DateTime weekEnd)
+    {
+        using var connection = OpenConnection();
+        using var transaction = connection.BeginTransaction();
 
+        try
+        {
+            // STEP 1: Create new WeeklySchedule
+            var insertSchedule = connection.CreateCommand();
+            insertSchedule.CommandText = @"
+                INSERT INTO WeeklySchedule (WeekStart, WeekEnd, WeeklyWorkloadID)
+                VALUES ($start, $end, $template);
+                SELECT last_insert_rowid();";
+            insertSchedule.Parameters.AddWithValue("$start", weekStart);
+            insertSchedule.Parameters.AddWithValue("$end", weekEnd);
+            insertSchedule.Parameters.AddWithValue("$template", weeklyWorkloadId);
+            long newScheduleId = (long)insertSchedule.ExecuteScalar();
+
+            // STEP 2: Read all DayWorkloads for the given WeeklyWorkload
+            var getDays = connection.CreateCommand();
+            getDays.CommandText = @"
+                SELECT DayWorkloadID, Day
+                FROM DayWorkload
+                WHERE WeeklyWorkloadID = $wk;";
+            getDays.Parameters.AddWithValue("$wk", weeklyWorkloadId);
+
+            var daysToClone = new List<(int oldId, string dayName)>();
+            using (var reader = getDays.ExecuteReader())
+            {
+                while (reader.Read())
+                    daysToClone.Add((reader.GetInt32(0), reader.GetString(1)));
+            }
+
+            // STEP 3: Create cloned DayWorkloads linked to the new schedule
+            var newDayMap = new Dictionary<int, int>(); // oldDayId → newDayId
+            foreach (var (oldDayId, dayName) in daysToClone)
+            {
+                var insertDay = connection.CreateCommand();
+                insertDay.CommandText = @"
+                    INSERT INTO DayWorkload (Day, WeeklyWorkloadID)
+                    VALUES ($day, $wk);
+                    SELECT last_insert_rowid();";
+                insertDay.Parameters.AddWithValue("$day", dayName);
+                insertDay.Parameters.AddWithValue("$wk", weeklyWorkloadId); // Still references same template
+                int newDayId = Convert.ToInt32(insertDay.ExecuteScalar());
+                newDayMap[oldDayId] = newDayId;
+            }
+
+            // STEP 4: Copy DayWorkload → WorkLoad mappings
+            foreach (var pair in newDayMap)
+            {
+                var mapCmd = connection.CreateCommand();
+                mapCmd.CommandText = @"
+                    INSERT INTO DayWorkloadWorkLoad (DayWorkloadID, WorkLoadID)
+                    SELECT $newId, WorkLoadID
+                    FROM DayWorkloadWorkLoad
+                    WHERE DayWorkloadID = $oldId;";
+                mapCmd.Parameters.AddWithValue("$newId", pair.Value);
+                mapCmd.Parameters.AddWithValue("$oldId", pair.Key);
+                mapCmd.ExecuteNonQuery();
+            }
+
+            transaction.Commit();
+            return (int)newScheduleId;
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
 }

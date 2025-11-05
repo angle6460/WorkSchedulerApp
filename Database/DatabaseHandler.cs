@@ -220,7 +220,7 @@ CREATE TABLE IF NOT EXISTS DaySchedule (
     // ---------------------------------------------------------------------
     // Insert Methods
     // ---------------------------------------------------------------------
-    public void InsertPerEmployeeWorkLoad(string name, string description, int minutesPerEmployee, int numberOfEmployees)
+    public int InsertPerEmployeeWorkLoad(string name, string description, int minutesPerEmployee, int numberOfEmployees)
     {
         using var connection = OpenConnection();
         using var transaction = connection.BeginTransaction();
@@ -229,9 +229,9 @@ CREATE TABLE IF NOT EXISTS DaySchedule (
         {
             var insertWorkLoad = connection.CreateCommand();
             insertWorkLoad.CommandText = @"
-                INSERT INTO WorkLoad (Name, Description, EstimatedHours, WorkLoadType)
-                VALUES ($name, $description, $estimatedHours, 'PerEmployee');
-                SELECT last_insert_rowid();";
+            INSERT INTO WorkLoad (Name, Description, EstimatedHours, WorkLoadType)
+            VALUES ($name, $description, $estimatedHours, 'PerEmployee');
+            SELECT last_insert_rowid();";
             insertWorkLoad.Parameters.AddWithValue("$name", name);
             insertWorkLoad.Parameters.AddWithValue("$description", description);
             insertWorkLoad.Parameters.AddWithValue("$estimatedHours", (minutesPerEmployee * numberOfEmployees) / 60);
@@ -239,14 +239,15 @@ CREATE TABLE IF NOT EXISTS DaySchedule (
 
             var insertDetails = connection.CreateCommand();
             insertDetails.CommandText = @"
-                INSERT INTO PerEmployeeWorkLoad (WorkLoadID, MinutesPerEmployee, NumberOfEmployees)
-                VALUES ($id, $minutesPerEmployee, $numberOfEmployees);";
+            INSERT INTO PerEmployeeWorkLoad (WorkLoadID, MinutesPerEmployee, NumberOfEmployees)
+            VALUES ($id, $minutesPerEmployee, $numberOfEmployees);";
             insertDetails.Parameters.AddWithValue("$id", workLoadId);
             insertDetails.Parameters.AddWithValue("$minutesPerEmployee", minutesPerEmployee);
             insertDetails.Parameters.AddWithValue("$numberOfEmployees", numberOfEmployees);
             insertDetails.ExecuteNonQuery();
 
             transaction.Commit();
+            return (int)workLoadId;
         }
         catch
         {
@@ -255,7 +256,7 @@ CREATE TABLE IF NOT EXISTS DaySchedule (
         }
     }
 
-    public void InsertPerItemWorkLoad(string name, string description, int minutesPerItem, int numberOfItems)
+    public int InsertPerItemWorkLoad(string name, string description, int minutesPerItem, int numberOfItems)
     {
         using var connection = OpenConnection();
         using var transaction = connection.BeginTransaction();
@@ -264,9 +265,9 @@ CREATE TABLE IF NOT EXISTS DaySchedule (
         {
             var insertWorkLoad = connection.CreateCommand();
             insertWorkLoad.CommandText = @"
-                INSERT INTO WorkLoad (Name, Description, EstimatedHours, WorkLoadType)
-                VALUES ($name, $description, $estimatedHours, 'PerItem');
-                SELECT last_insert_rowid();";
+            INSERT INTO WorkLoad (Name, Description, EstimatedHours, WorkLoadType)
+            VALUES ($name, $description, $estimatedHours, 'PerItem');
+            SELECT last_insert_rowid();";
             insertWorkLoad.Parameters.AddWithValue("$name", name);
             insertWorkLoad.Parameters.AddWithValue("$description", description);
             insertWorkLoad.Parameters.AddWithValue("$estimatedHours", (minutesPerItem * numberOfItems) / 60);
@@ -274,14 +275,15 @@ CREATE TABLE IF NOT EXISTS DaySchedule (
 
             var insertDetails = connection.CreateCommand();
             insertDetails.CommandText = @"
-                INSERT INTO PerItemWorkLoad (WorkLoadID, MinutesPerItem, NumberOfItems)
-                VALUES ($id, $minutesPerItem, $numberOfItems);";
+            INSERT INTO PerItemWorkLoad (WorkLoadID, MinutesPerItem, NumberOfItems)
+            VALUES ($id, $minutesPerItem, $numberOfItems);";
             insertDetails.Parameters.AddWithValue("$id", workLoadId);
             insertDetails.Parameters.AddWithValue("$minutesPerItem", minutesPerItem);
             insertDetails.Parameters.AddWithValue("$numberOfItems", numberOfItems);
             insertDetails.ExecuteNonQuery();
 
             transaction.Commit();
+            return (int)workLoadId;
         }
         catch
         {
@@ -290,7 +292,7 @@ CREATE TABLE IF NOT EXISTS DaySchedule (
         }
     }
 
-    public void InsertFixedWorkLoad(string name, string description, int fixedHours)
+    public int InsertFixedWorkLoad(string name, string description, int fixedHours)
     {
         using var connection = OpenConnection();
         using var transaction = connection.BeginTransaction();
@@ -299,9 +301,9 @@ CREATE TABLE IF NOT EXISTS DaySchedule (
         {
             var insertWorkLoad = connection.CreateCommand();
             insertWorkLoad.CommandText = @"
-                INSERT INTO WorkLoad (Name, Description, EstimatedHours, WorkLoadType)
-                VALUES ($name, $description, $estimatedHours, 'Fixed');
-                SELECT last_insert_rowid();";
+            INSERT INTO WorkLoad (Name, Description, EstimatedHours, WorkLoadType)
+            VALUES ($name, $description, $estimatedHours, 'Fixed');
+            SELECT last_insert_rowid();";
             insertWorkLoad.Parameters.AddWithValue("$name", name);
             insertWorkLoad.Parameters.AddWithValue("$description", description);
             insertWorkLoad.Parameters.AddWithValue("$estimatedHours", fixedHours);
@@ -309,13 +311,14 @@ CREATE TABLE IF NOT EXISTS DaySchedule (
 
             var insertDetails = connection.CreateCommand();
             insertDetails.CommandText = @"
-                INSERT INTO FixedWorkLoad (WorkLoadID, FixedHours)
-                VALUES ($id, $fixedHours);";
+            INSERT INTO FixedWorkLoad (WorkLoadID, FixedHours)
+            VALUES ($id, $fixedHours);";
             insertDetails.Parameters.AddWithValue("$id", workLoadId);
             insertDetails.Parameters.AddWithValue("$fixedHours", fixedHours);
             insertDetails.ExecuteNonQuery();
 
             transaction.Commit();
+            return (int)workLoadId;
         }
         catch
         {
@@ -324,7 +327,7 @@ CREATE TABLE IF NOT EXISTS DaySchedule (
         }
     }
 
-    public void InsertWorkGroup(string name, List<int> workLoadIds)
+    public int InsertWorkGroup(string name, List<int> workLoadIds)
     {
         using var connection = OpenConnection();
         using var transaction = connection.BeginTransaction();
@@ -351,6 +354,7 @@ CREATE TABLE IF NOT EXISTS DaySchedule (
             }
 
             transaction.Commit();
+            return (int)workGroupId;
         }
         catch
         {

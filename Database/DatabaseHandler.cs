@@ -612,6 +612,50 @@ CREATE TABLE IF NOT EXISTS EmployeeDailySchedule (
         cmd.Parameters.AddWithValue("$name", name);
         return Convert.ToInt32(cmd.ExecuteScalar());
     }
+    // ---------------------------------------------------------------------
+    // Delete Operations
+    // ---------------------------------------------------------------------
+
+    public void DeleteEmployee(string employeeId)
+    {
+        using var connection = OpenConnection();
+        using var transaction = connection.BeginTransaction();
+
+        try
+        {
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = "DELETE FROM Employee WHERE EmployeeID = $id;";
+            cmd.Parameters.AddWithValue("$id", employeeId);
+            cmd.ExecuteNonQuery();
+            transaction.Commit();
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
+
+    public void DeleteWorkLoad(int workLoadId)
+    {
+        using var connection = OpenConnection();
+        using var transaction = connection.BeginTransaction();
+
+        try
+        {
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = "DELETE FROM WorkLoad WHERE WorkLoadID = $id;";
+            cmd.Parameters.AddWithValue("$id", workLoadId);
+            cmd.ExecuteNonQuery();
+            transaction.Commit();
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
+
 
 
 }

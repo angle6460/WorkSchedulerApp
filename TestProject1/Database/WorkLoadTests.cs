@@ -55,4 +55,20 @@ public class WorkLoadTests : DatabaseTestBase
         Assert.That(wl?.name, Is.EqualTo("Maintenance"));
         Assert.That(wl?.type, Is.EqualTo("Fixed"));
     }
+    [Test]
+    public void UpdateWorkLoad_ChangesStoredData()
+    {
+        var db = DatabaseHandler.Instance;
+        db.InsertFixedWorkLoad("Inventory Check", "Initial version", 3);
+        int id = db.GetWorkLoadIdByName("Inventory Check");
+
+        db.UpdateWorkLoad(id, "Inventory Audit", "Updated version", 4);
+
+        var wl = db.GetWorkLoadById(id);
+        Assert.That(wl.HasValue);
+        Assert.That(wl?.name, Is.EqualTo("Inventory Audit"));
+        Assert.That(wl?.description, Is.EqualTo("Updated version"));
+        Assert.That(wl?.estimatedHours, Is.EqualTo(4));
+    }
+
 }

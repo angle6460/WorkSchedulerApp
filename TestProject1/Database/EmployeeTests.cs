@@ -44,4 +44,22 @@ public class EmployeeTests : DatabaseTestBase
         Assert.That(employee?.role, Is.EqualTo("Manager"));
         Assert.That(employee?.requestedHours, Is.EqualTo(40));
     }
+    [Test]
+    public void UpdateEmployee_ChangesStoredData()
+    {
+        var db = DatabaseHandler.Instance;
+        string id = Guid.NewGuid().ToString();
+
+        db.InsertEmployee(id, "Jordan Gray", "Assistant", 20, "Mon–Wed", "Part-time");
+
+        // Update
+        db.UpdateEmployee(id, "Jordan Gray", "Supervisor", 38, "Mon–Fri", "Full-time");
+
+        var employee = db.GetEmployeeById(id);
+        Assert.That(employee.HasValue);
+        Assert.That(employee?.role, Is.EqualTo("Supervisor"));
+        Assert.That(employee?.requestedHours, Is.EqualTo(38));
+        Assert.That(employee?.contractedHours, Is.EqualTo("Full-time"));
+    }
+
 }

@@ -655,7 +655,130 @@ CREATE TABLE IF NOT EXISTS EmployeeDailySchedule (
             throw;
         }
     }
+    // ---------------------------------------------------------------------
+    // Update Operations
+    // ---------------------------------------------------------------------
 
+    public void UpdateEmployee(
+        string employeeId,
+        string name,
+        string role,
+        int requestedHours,
+        string availability,
+        string contractedHours)
+    {
+        using var connection = OpenConnection();
+        using var transaction = connection.BeginTransaction();
 
+        try
+        {
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+                UPDATE Employee
+                SET 
+                    Name = $name,
+                    Role = $role,
+                    RequestedHours = $requested,
+                    Availability = $availability,
+                    ContractedHours = $contracted
+                WHERE EmployeeID = $id;";
+            cmd.Parameters.AddWithValue("$id", employeeId);
+            cmd.Parameters.AddWithValue("$name", name);
+            cmd.Parameters.AddWithValue("$role", role);
+            cmd.Parameters.AddWithValue("$requested", requestedHours);
+            cmd.Parameters.AddWithValue("$availability", availability);
+            cmd.Parameters.AddWithValue("$contracted", contractedHours);
+            cmd.ExecuteNonQuery();
 
+            transaction.Commit();
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
+
+    public void UpdateWorkLoad(
+        int workLoadId,
+        string name,
+        string description,
+        int estimatedHours)
+    {
+        using var connection = OpenConnection();
+        using var transaction = connection.BeginTransaction();
+
+        try
+        {
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+                UPDATE WorkLoad
+                SET 
+                    Name = $name,
+                    Description = $description,
+                    EstimatedHours = $hours
+                WHERE WorkLoadID = $id;";
+            cmd.Parameters.AddWithValue("$id", workLoadId);
+            cmd.Parameters.AddWithValue("$name", name);
+            cmd.Parameters.AddWithValue("$description", description);
+            cmd.Parameters.AddWithValue("$hours", estimatedHours);
+            cmd.ExecuteNonQuery();
+
+            transaction.Commit();
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
+    // ---------------------------------------------------------------------
+    // WorkGroup Update / Delete Operations
+    // ---------------------------------------------------------------------
+
+    public void UpdateWorkGroup(int workGroupId, string newName)
+    {
+        using var connection = OpenConnection();
+        using var transaction = connection.BeginTransaction();
+
+        try
+        {
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+            UPDATE WorkGroup
+            SET Name = $name
+            WHERE WorkGroupID = $id;";
+            cmd.Parameters.AddWithValue("$id", workGroupId);
+            cmd.Parameters.AddWithValue("$name", newName);
+            cmd.ExecuteNonQuery();
+
+            transaction.Commit();
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
+
+    public void DeleteWorkGroup(int workGroupId)
+    {
+        using var connection = OpenConnection();
+        using var transaction = connection.BeginTransaction();
+
+        try
+        {
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = "DELETE FROM WorkGroup WHERE WorkGroupID = $id;";
+            cmd.Parameters.AddWithValue("$id", workGroupId);
+            cmd.ExecuteNonQuery();
+
+            transaction.Commit();
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
 }

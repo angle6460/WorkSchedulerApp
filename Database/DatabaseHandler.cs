@@ -347,6 +347,35 @@ CREATE TABLE IF NOT EXISTS EmployeeDailySchedule (
             throw;
         }
     }
+    
+    public void InsertEmployee(string employeeId, string name, string role, int requestedHours, string availability, string contractedHours)
+    {
+        using var connection = OpenConnection();
+        using var transaction = connection.BeginTransaction();
+
+        try
+        {
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+            INSERT INTO Employee (EmployeeID, Name, Role, RequestedHours, Availability, ContractedHours)
+            VALUES ($id, $name, $role, $requested, $availability, $contracted);";
+            cmd.Parameters.AddWithValue("$id", employeeId);
+            cmd.Parameters.AddWithValue("$name", name);
+            cmd.Parameters.AddWithValue("$role", role);
+            cmd.Parameters.AddWithValue("$requested", requestedHours);
+            cmd.Parameters.AddWithValue("$availability", availability);
+            cmd.Parameters.AddWithValue("$contracted", contractedHours);
+            cmd.ExecuteNonQuery();
+
+            transaction.Commit();
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
+
 
     // ---------------------------------------------------------------------
     // View / Query Commands
@@ -421,5 +450,49 @@ CREATE TABLE IF NOT EXISTS EmployeeDailySchedule (
             result.Add((reader.GetInt32(0), reader.GetString(1)));
         }
         return result;
+    }
+    
+    public List<(string id, string name, string role)> GetAllEmployees()
+    {
+        var result = new List<(string, string, string)>();
+        using var connection = OpenConnection();
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT EmployeeID, Name, Role FROM Employee;";
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            var id = reader.GetString(0);
+            var name = reader.GetString(1);
+            var role = reader.IsDBNull(2) ? "" : reader.GetString(2);
+            result.Add((id, name, role));
+        }
+        return result;
+    }
+
+    public (string id, string name, string role, int requestedHours, string availability, string contractedHours)? GetEmployeeById(string employeeId)
+    {
+        using var connection = OpenConnection();
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+        SELECT EmployeeID, Name, Role, RequestedHours, Availability, ContractedHours
+        FROM Employee
+        WHERE EmployeeID = $id;";
+        cmd.Parameters.AddWithValue("$id", employeeId);
+
+        using var reader = cmd.ExecuteReader();
+        if (reader.Read())
+        {
+            return (
+                reader.GetString(0),
+                reader.GetString(1),
+                reader.IsDBNull(2) ? "" : reader.GetString(2),
+                reader.IsDBNull(3) ? 0 : reader.GetInt32(3),
+                reader.IsDBNull(4) ? "" : reader.GetString(4),
+                reader.IsDBNull(5) ? "" : reader.GetString(5)
+            );
+        }
+
+        return null;
     }
 }

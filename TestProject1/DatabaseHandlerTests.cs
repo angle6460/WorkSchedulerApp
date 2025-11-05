@@ -25,10 +25,10 @@ public class DatabaseHandlerTests
         if (File.Exists(_testDbPath))
             File.Delete(_testDbPath);
 
-        var connectionString = $"Data Source={_testDbPath};";
+        string connectionString = $"Data Source={_testDbPath};";
 
         // Configure singleton and trigger schema creation
-        var dbHandler = DatabaseHandler.Instance.Initialize(connectionString);
+         DatabaseHandler.Instance.Initialize(connectionString);
         // dbHandler.ConnectionString = connectionString; not needed now
 
         Assert.That(File.Exists(_testDbPath), Is.True, "Database file should exist after schema creation.");
@@ -200,9 +200,84 @@ public class DatabaseHandlerTests
         Assert.That(mapped.Count, Is.GreaterThan(0));
         Assert.That(mapped.Exists(w => w.workLoadId == workLoadId));
     }
+    
+    // ------------------------------------------------------------
+// Employee Table Tests
+// ------------------------------------------------------------
+
+    [Test]
+    public void Test_InsertEmployee_CreatesRecord()
+    {
+        var db = DatabaseHandler.Instance;
+        string employeeId = Guid.NewGuid().ToString();
+
+        db.InsertEmployee(
+            employeeId,
+            "Alex Rivera",
+            "Cashier",
+            30,
+            "Mon–Fri 9:00–15:00",
+            "Part-time"
+        );
+
+        using var conn = new SqliteConnection(db.ConnectionString);
+        conn.Open();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT COUNT(*) FROM Employee WHERE EmployeeID = $id;";
+        cmd.Parameters.AddWithValue("$id", employeeId);
+
+        int count = Convert.ToInt32(cmd.ExecuteScalar());
+        Assert.That(count, Is.EqualTo(1), "Employee record should have been inserted.");
+    }
+
+    [Test]
+    public void Test_GetAllEmployees_ReturnsInsertedEmployees()
+    {
+        var db = DatabaseHandler.Instance;
+        string id = Guid.NewGuid().ToString();
+
+        db.InsertEmployee(
+            id,
+            "Jamie Lee",
+            "Supervisor",
+            38,
+            "Mon–Fri 8:00–16:00",
+            "Full-time"
+        );
+
+        var allEmployees = db.GetAllEmployees();
+
+        Assert.That(allEmployees.Count, Is.GreaterThan(0), "There should be at least one employee.");
+        Assert.That(allEmployees.Exists(e => e.name == "Jamie Lee"), Is.True, "Inserted employee should appear in list.");
+    }
+
+    [Test]
+    public void Test_GetEmployeeById_ReturnsCorrectDetails()
+    {
+        var db = DatabaseHandler.Instance;
+        string id = Guid.NewGuid().ToString();
+
+        db.InsertEmployee(
+            id,
+            "Taylor Chen",
+            "Manager",
+            40,
+            "Mon–Fri 9:00–17:00",
+            "Full-time"
+        );
+
+        var employee = db.GetEmployeeById(id);
+
+        Assert.That(employee.HasValue, Is.True, "Employee should exist.");
+        Assert.That(employee?.name, Is.EqualTo("Taylor Chen"));
+        Assert.That(employee?.role, Is.EqualTo("Manager"));
+        Assert.That(employee?.requestedHours, Is.EqualTo(40));
+        Assert.That(employee?.contractedHours, Is.EqualTo("Full-time"));
+    }
+
 
     // ------------------------------------------------------------
-    // Foreign-Key Enforcement Test (Option 2)
+    // Foreign-Key Enforcement Test 
     // ------------------------------------------------------------
 
     [Test]

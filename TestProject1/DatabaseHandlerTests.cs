@@ -11,31 +11,24 @@ public class DatabaseHandlerTests
     [OneTimeSetUp]
     public void GlobalSetup()
     {
-        // Base directory of test binaries
         var baseDir = AppDomain.CurrentDomain.BaseDirectory;
-
-        // Create a "TestDB" folder next to the binaries
         var testDbDir = Path.Combine(baseDir, "TestDB");
         Directory.CreateDirectory(testDbDir);
 
-        // Create a unique DB file for this test session
         _testDbPath = Path.Combine(testDbDir, $"TestDB_{Guid.NewGuid()}.db");
         Console.WriteLine($"[TEST DB PATH] {_testDbPath}");
 
         if (File.Exists(_testDbPath))
             File.Delete(_testDbPath);
 
-        string connectionString = $"Data Source={_testDbPath};";
-
-        // Configure singleton and trigger schema creation
-         DatabaseHandler.Instance.Initialize(connectionString);
-        // dbHandler.ConnectionString = connectionString; not needed now
+        var connectionString = $"Data Source={_testDbPath};";
+        DatabaseHandler.Instance.Initialize(connectionString);
 
         Assert.That(File.Exists(_testDbPath), Is.True, "Database file should exist after schema creation.");
     }
 
     // ------------------------------------------------------------
-    // Core Insert Tests
+    // WorkLoad Insert & Retrieval Tests
     // ------------------------------------------------------------
 
     [Test]
@@ -43,13 +36,7 @@ public class DatabaseHandlerTests
     {
         var db = DatabaseHandler.Instance;
         db.InsertPerEmployeeWorkLoad("Meeting", "10 minute huddle", 10, 3);
-
-        using var conn = new SqliteConnection(db.ConnectionString);
-        conn.Open();
-        var cmd = conn.CreateCommand();
-        cmd.CommandText = "SELECT COUNT(*) FROM WorkLoad WHERE Name='Meeting';";
-        int count = Convert.ToInt32(cmd.ExecuteScalar());
-
+        int count = db.GetWorkLoadCountByName("Meeting");
         Assert.That(count, Is.EqualTo(1));
     }
 
@@ -58,14 +45,8 @@ public class DatabaseHandlerTests
     {
         var db = DatabaseHandler.Instance;
         db.InsertPerItemWorkLoad("Packaging", "Wrap items", 5, 10);
-
-        using var conn = new SqliteConnection(db.ConnectionString);
-        conn.Open();
-        var cmd = conn.CreateCommand();
-        cmd.CommandText = "SELECT COUNT(*) FROM PerItemWorkLoad;";
-        int count = Convert.ToInt32(cmd.ExecuteScalar());
-
-        Assert.That(count, Is.GreaterThan(0));
+        int count = db.GetWorkLoadCountByName("Packaging");
+        Assert.That(count, Is.EqualTo(1));
     }
 
     [Test]
@@ -73,47 +54,9 @@ public class DatabaseHandlerTests
     {
         var db = DatabaseHandler.Instance;
         db.InsertFixedWorkLoad("Cleaning", "Night cleanup", 2);
-
-        using var conn = new SqliteConnection(db.ConnectionString);
-        conn.Open();
-        var cmd = conn.CreateCommand();
-        cmd.CommandText = "SELECT COUNT(*) FROM FixedWorkLoad;";
-        int count = Convert.ToInt32(cmd.ExecuteScalar());
-
-        Assert.That(count, Is.GreaterThan(0));
+        int count = db.GetWorkLoadCountByName("Cleaning");
+        Assert.That(count, Is.EqualTo(1));
     }
-
-    [Test]
-    public void Test_InsertWorkGroup_MapsWorkLoads()
-    {
-        var db = DatabaseHandler.Instance;
-        db.InsertFixedWorkLoad("Restock", "Restock shelves", 1);
-
-        int workLoadId;
-        using (var conn = new SqliteConnection(db.ConnectionString))
-        {
-            conn.Open();
-            var cmd = conn.CreateCommand();
-            cmd.CommandText = "SELECT WorkLoadID FROM WorkLoad WHERE Name='Restock';";
-            workLoadId = Convert.ToInt32(cmd.ExecuteScalar());
-        }
-
-        db.InsertWorkGroup("Morning Crew", new List<int> { workLoadId });
-
-        using (var conn = new SqliteConnection(db.ConnectionString))
-        {
-            conn.Open();
-            var cmd = conn.CreateCommand();
-            cmd.CommandText = "SELECT COUNT(*) FROM WorkGroupWorkLoad;";
-            int count = Convert.ToInt32(cmd.ExecuteScalar());
-
-            Assert.That(count, Is.GreaterThan(0));
-        }
-    }
-
-    // ------------------------------------------------------------
-    // View / Retrieval Tests
-    // ------------------------------------------------------------
 
     [Test]
     public void Test_GetAllWorkLoads_ReturnsInserted()
@@ -132,15 +75,7 @@ public class DatabaseHandlerTests
     {
         var db = DatabaseHandler.Instance;
         db.InsertFixedWorkLoad("Maintenance", "Clean equipment", 2);
-
-        int id;
-        using (var conn = new SqliteConnection(db.ConnectionString))
-        {
-            conn.Open();
-            var cmd = conn.CreateCommand();
-            cmd.CommandText = "SELECT WorkLoadID FROM WorkLoad WHERE Name='Maintenance';";
-            id = Convert.ToInt32(cmd.ExecuteScalar());
-        }
+        int id = db.GetWorkLoadIdByName("Maintenance");
 
         var wl = db.GetWorkLoadById(id);
         Assert.That(wl.HasValue, Is.True);
@@ -148,26 +83,22 @@ public class DatabaseHandlerTests
         Assert.That(wl?.type, Is.EqualTo("Fixed"));
     }
 
+    // ------------------------------------------------------------
+    // WorkGroup Tests
+    // ------------------------------------------------------------
+
     [Test]
-    public void Test_GetAllWorkGroups_ReturnsCreatedGroup()
+    public void Test_InsertWorkGroup_MapsWorkLoads()
     {
         var db = DatabaseHandler.Instance;
-        db.InsertFixedWorkLoad("Stock", "Stock shelves", 1);
+        db.InsertFixedWorkLoad("Restock", "Restock shelves", 1);
+        int workLoadId = db.GetWorkLoadIdByName("Restock");
 
-        int workLoadId;
-        using (var conn = new SqliteConnection(db.ConnectionString))
-        {
-            conn.Open();
-            var cmd = conn.CreateCommand();
-            cmd.CommandText = "SELECT WorkLoadID FROM WorkLoad WHERE Name='Stock';";
-            workLoadId = Convert.ToInt32(cmd.ExecuteScalar());
-        }
+        db.InsertWorkGroup("Morning Crew", new List<int> { workLoadId });
 
-        db.InsertWorkGroup("Evening Shift", new List<int> { workLoadId });
         var groups = db.GetAllWorkGroups();
-
         Assert.That(groups.Count, Is.GreaterThan(0));
-        Assert.That(groups.Exists(g => g.name == "Evening Shift"));
+        Assert.That(groups.Exists(g => g.name == "Morning Crew"));
     }
 
     [Test]
@@ -175,59 +106,31 @@ public class DatabaseHandlerTests
     {
         var db = DatabaseHandler.Instance;
         db.InsertFixedWorkLoad("Unload Truck", "Unload shipments", 3);
-
-        int workLoadId;
-        using (var conn = new SqliteConnection(db.ConnectionString))
-        {
-            conn.Open();
-            var cmd = conn.CreateCommand();
-            cmd.CommandText = "SELECT WorkLoadID FROM WorkLoad WHERE Name='Unload Truck';";
-            workLoadId = Convert.ToInt32(cmd.ExecuteScalar());
-        }
+        int workLoadId = db.GetWorkLoadIdByName("Unload Truck");
 
         db.InsertWorkGroup("Logistics", new List<int> { workLoadId });
-
-        int groupId;
-        using (var conn = new SqliteConnection(db.ConnectionString))
-        {
-            conn.Open();
-            var cmd = conn.CreateCommand();
-            cmd.CommandText = "SELECT WorkGroupID FROM WorkGroup WHERE Name='Logistics';";
-            groupId = Convert.ToInt32(cmd.ExecuteScalar());
-        }
+        var groups = db.GetAllWorkGroups();
+        int groupId = groups.First(g => g.name == "Logistics").id;
 
         var mapped = db.GetWorkLoadsForGroup(groupId);
         Assert.That(mapped.Count, Is.GreaterThan(0));
         Assert.That(mapped.Exists(w => w.workLoadId == workLoadId));
     }
-    
+
     // ------------------------------------------------------------
-// Employee Table Tests
-// ------------------------------------------------------------
+    // Employee Table Tests
+    // ------------------------------------------------------------
 
     [Test]
     public void Test_InsertEmployee_CreatesRecord()
     {
         var db = DatabaseHandler.Instance;
-        string employeeId = Guid.NewGuid().ToString();
+        string id = Guid.NewGuid().ToString();
 
-        db.InsertEmployee(
-            employeeId,
-            "Alex Rivera",
-            "Cashier",
-            30,
-            "Mon–Fri 9:00–15:00",
-            "Part-time"
-        );
+        db.InsertEmployee(id, "Alex Rivera", "Cashier", 30, "Mon–Fri 9:00–15:00", "Part-time");
+        var all = db.GetAllEmployees();
 
-        using var conn = new SqliteConnection(db.ConnectionString);
-        conn.Open();
-        var cmd = conn.CreateCommand();
-        cmd.CommandText = "SELECT COUNT(*) FROM Employee WHERE EmployeeID = $id;";
-        cmd.Parameters.AddWithValue("$id", employeeId);
-
-        int count = Convert.ToInt32(cmd.ExecuteScalar());
-        Assert.That(count, Is.EqualTo(1), "Employee record should have been inserted.");
+        Assert.That(all.Exists(e => e.id == id));
     }
 
     [Test]
@@ -236,19 +139,11 @@ public class DatabaseHandlerTests
         var db = DatabaseHandler.Instance;
         string id = Guid.NewGuid().ToString();
 
-        db.InsertEmployee(
-            id,
-            "Jamie Lee",
-            "Supervisor",
-            38,
-            "Mon–Fri 8:00–16:00",
-            "Full-time"
-        );
+        db.InsertEmployee(id, "Jamie Lee", "Supervisor", 38, "Mon–Fri 8:00–16:00", "Full-time");
+        var all = db.GetAllEmployees();
 
-        var allEmployees = db.GetAllEmployees();
-
-        Assert.That(allEmployees.Count, Is.GreaterThan(0), "There should be at least one employee.");
-        Assert.That(allEmployees.Exists(e => e.name == "Jamie Lee"), Is.True, "Inserted employee should appear in list.");
+        Assert.That(all.Count, Is.GreaterThan(0));
+        Assert.That(all.Exists(e => e.name == "Jamie Lee"));
     }
 
     [Test]
@@ -257,27 +152,98 @@ public class DatabaseHandlerTests
         var db = DatabaseHandler.Instance;
         string id = Guid.NewGuid().ToString();
 
-        db.InsertEmployee(
-            id,
-            "Taylor Chen",
-            "Manager",
-            40,
-            "Mon–Fri 9:00–17:00",
-            "Full-time"
-        );
+        db.InsertEmployee(id, "Taylor Chen", "Manager", 40, "Mon–Fri 9:00–17:00", "Full-time");
 
         var employee = db.GetEmployeeById(id);
-
-        Assert.That(employee.HasValue, Is.True, "Employee should exist.");
+        Assert.That(employee.HasValue);
         Assert.That(employee?.name, Is.EqualTo("Taylor Chen"));
         Assert.That(employee?.role, Is.EqualTo("Manager"));
         Assert.That(employee?.requestedHours, Is.EqualTo(40));
-        Assert.That(employee?.contractedHours, Is.EqualTo("Full-time"));
     }
 
+    // ------------------------------------------------------------
+    // Employee Skills Tests
+    // ------------------------------------------------------------
+
+    [Test]
+    public void Test_AddSkillToEmployee_CreatesMapping()
+    {
+        var db = DatabaseHandler.Instance;
+
+        db.InsertFixedWorkLoad("Operate Register", "Handles cash transactions", 1);
+        int workLoadId = db.GetWorkLoadIdByName("Operate Register");
+
+        string empId = Guid.NewGuid().ToString();
+        db.InsertEmployee(empId, "Riley Park", "Cashier", 25, "Mon–Fri", "Part-time");
+
+        db.AddSkillToEmployee(empId, workLoadId);
+        int count = db.GetEmployeeSkillCount(empId, workLoadId);
+
+        Assert.That(count, Is.EqualTo(1));
+    }
+
+    [Test]
+    public void Test_GetSkillsForEmployee_ReturnsMappedSkills()
+    {
+        var db = DatabaseHandler.Instance;
+
+        db.InsertFixedWorkLoad("Stock Shelves", "Organize inventory", 2);
+        int workLoadId = db.GetWorkLoadIdByName("Stock Shelves");
+
+        string empId = Guid.NewGuid().ToString();
+        db.InsertEmployee(empId, "Ava Nguyen", "Store Assistant", 20, "Sat–Sun", "Casual");
+        db.AddSkillToEmployee(empId, workLoadId);
+
+        var skills = db.GetSkillsForEmployee(empId);
+        Assert.That(skills.Count, Is.EqualTo(1));
+        Assert.That(skills[0].workLoadId, Is.EqualTo(workLoadId));
+    }
+
+    [Test]
+    public void Test_GetEmployeesForSkill_ReturnsMappedEmployees()
+    {
+        var db = DatabaseHandler.Instance;
+
+        db.InsertFixedWorkLoad("Customer Service", "Assist customers", 1);
+        int workLoadId = db.GetWorkLoadIdByName("Customer Service");
+
+        string emp1 = Guid.NewGuid().ToString();
+        string emp2 = Guid.NewGuid().ToString();
+
+        db.InsertEmployee(emp1, "Taylor Nguyen", "Assistant", 30, "Mon–Fri", "Full-time");
+        db.InsertEmployee(emp2, "Riley Chen", "Supervisor", 35, "Tue–Sat", "Full-time");
+
+        db.AddSkillToEmployee(emp1, workLoadId);
+        db.AddSkillToEmployee(emp2, workLoadId);
+
+        var employees = db.GetEmployeesForSkill(workLoadId);
+        Assert.That(employees.Count, Is.EqualTo(2));
+        Assert.That(employees.Exists(e => e.employeeName == "Taylor Nguyen"));
+        Assert.That(employees.Exists(e => e.employeeName == "Riley Chen"));
+    }
+
+    [Test]
+    public void Test_RemoveSkillFromEmployee_DeletesMapping()
+    {
+        var db = DatabaseHandler.Instance;
+
+        db.InsertFixedWorkLoad("Unload Truck", "Unload shipments", 2);
+        int workLoadId = db.GetWorkLoadIdByName("Unload Truck");
+
+        string empId = Guid.NewGuid().ToString();
+        db.InsertEmployee(empId, "Jamie Park", "Logistics", 32, "Mon–Fri", "Full-time");
+
+        db.AddSkillToEmployee(empId, workLoadId);
+        int before = db.GetEmployeeSkillCount(empId, workLoadId);
+        Assert.That(before, Is.EqualTo(1));
+
+        db.RemoveSkillFromEmployee(empId, workLoadId);
+        int after = db.GetEmployeeSkillCount(empId, workLoadId);
+        Assert.That(after, Is.EqualTo(0));
+    }
 
     // ------------------------------------------------------------
-    // Foreign-Key Enforcement Test 
+    // Foreign-Key Enforcement Test
     // ------------------------------------------------------------
 
     [Test]

@@ -495,4 +495,123 @@ CREATE TABLE IF NOT EXISTS EmployeeDailySchedule (
 
         return null;
     }
+    
+    // ---------------------------------------------------------------------
+    // Employee Skill Mapping (Many-to-Many Link Table)
+    // ---------------------------------------------------------------------
+
+    public void AddSkillToEmployee(string employeeId, int workLoadId)
+    {
+        using var connection = OpenConnection();
+        using var transaction = connection.BeginTransaction();
+
+        try
+        {
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+                INSERT INTO EmployeeSkills (EmployeeID, WorkLoadID)
+                VALUES ($empId, $workLoadId);";
+            cmd.Parameters.AddWithValue("$empId", employeeId);
+            cmd.Parameters.AddWithValue("$workLoadId", workLoadId);
+            cmd.ExecuteNonQuery();
+
+            transaction.Commit();
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
+
+    public void RemoveSkillFromEmployee(string employeeId, int workLoadId)
+    {
+        using var connection = OpenConnection();
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+            DELETE FROM EmployeeSkills
+            WHERE EmployeeID = $empId AND WorkLoadID = $workLoadId;";
+        cmd.Parameters.AddWithValue("$empId", employeeId);
+        cmd.Parameters.AddWithValue("$workLoadId", workLoadId);
+        cmd.ExecuteNonQuery();
+    }
+
+    public List<(int workLoadId, string workLoadName)> GetSkillsForEmployee(string employeeId)
+    {
+        var result = new List<(int, string)>();
+        using var connection = OpenConnection();
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+            SELECT wl.WorkLoadID, wl.Name
+            FROM WorkLoad wl
+            JOIN EmployeeSkills es ON wl.WorkLoadID = es.WorkLoadID
+            WHERE es.EmployeeID = $id;";
+        cmd.Parameters.AddWithValue("$id", employeeId);
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            result.Add((reader.GetInt32(0), reader.GetString(1)));
+        }
+
+        return result;
+    }
+
+    public List<(string employeeId, string employeeName)> GetEmployeesForSkill(int workLoadId)
+    {
+        var result = new List<(string, string)>();
+        using var connection = OpenConnection();
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+            SELECT e.EmployeeID, e.Name
+            FROM Employee e
+            JOIN EmployeeSkills es ON e.EmployeeID = es.EmployeeID
+            WHERE es.WorkLoadID = $id;";
+        cmd.Parameters.AddWithValue("$id", workLoadId);
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            result.Add((reader.GetString(0), reader.GetString(1)));
+        }
+
+        return result;
+    }
+    // ---------------------------------------------------------------------
+    // Utility / Helper Queries
+    // ---------------------------------------------------------------------
+
+    public int GetWorkLoadIdByName(string name)
+    {
+        using var connection = OpenConnection();
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT WorkLoadID FROM WorkLoad WHERE Name=$name;";
+        cmd.Parameters.AddWithValue("$name", name);
+        var result = cmd.ExecuteScalar();
+        return result != null ? Convert.ToInt32(result) : -1;
+    }
+
+    public int GetEmployeeSkillCount(string employeeId, int workLoadId)
+    {
+        using var connection = OpenConnection();
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+            SELECT COUNT(*) 
+            FROM EmployeeSkills 
+            WHERE EmployeeID=$emp AND WorkLoadID=$wl;";
+        cmd.Parameters.AddWithValue("$emp", employeeId);
+        cmd.Parameters.AddWithValue("$wl", workLoadId);
+        return Convert.ToInt32(cmd.ExecuteScalar());
+    }
+
+    public int GetWorkLoadCountByName(string name)
+    {
+        using var connection = OpenConnection();
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT COUNT(*) FROM WorkLoad WHERE Name=$name;";
+        cmd.Parameters.AddWithValue("$name", name);
+        return Convert.ToInt32(cmd.ExecuteScalar());
+    }
+
+
 }

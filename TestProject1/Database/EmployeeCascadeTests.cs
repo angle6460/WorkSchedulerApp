@@ -45,9 +45,9 @@ namespace WorkSchedulerApp.TestProject1.Database
 
                 int skillCount, weeklyAssignCount, dailyAssignCount;
 
-                // EmployeeSkills
+                // EmployeeSkill
                 var cmd1 = conn.CreateCommand();
-                cmd1.CommandText = "SELECT COUNT(*) FROM EmployeeSkills WHERE EmployeeID = $id;";
+                cmd1.CommandText = "SELECT COUNT(*) FROM EmployeeSkill WHERE EmployeeID = $id;";
                 cmd1.Parameters.AddWithValue("$id", empId);
                 skillCount = Convert.ToInt32(cmd1.ExecuteScalar());
 
@@ -64,7 +64,7 @@ namespace WorkSchedulerApp.TestProject1.Database
                 dailyAssignCount = Convert.ToInt32(cmd3.ExecuteScalar());
 
                 // Assertions
-                Assert.That(skillCount, Is.EqualTo(0), "EmployeeSkills should cascade delete.");
+                Assert.That(skillCount, Is.EqualTo(0), "EmployeeSkill should cascade delete.");
                 Assert.That(weeklyAssignCount, Is.EqualTo(0), "EmployeeWeeklySchedule should cascade delete.");
                 Assert.That(dailyAssignCount, Is.EqualTo(0), "EmployeeDailySchedule should cascade delete.");
             }

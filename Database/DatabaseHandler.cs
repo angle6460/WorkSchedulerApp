@@ -363,7 +363,7 @@ CREATE TABLE IF NOT EXISTS DaySchedule (
         }
     }
     
-    public void InsertEmployee(string employeeId, string name, string role, int requestedHours, string availability, string contractedHours)
+    public string InsertEmployee(string employeeId, string name, string role, int requestedHours, string availability, string contractedHours)
     {
         using var connection = OpenConnection();
         using var transaction = connection.BeginTransaction();
@@ -389,6 +389,8 @@ CREATE TABLE IF NOT EXISTS DaySchedule (
             transaction.Rollback();
             throw;
         }
+
+        return employeeId;
     }
 
 

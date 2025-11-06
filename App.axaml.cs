@@ -25,6 +25,19 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        // Define database path under your project folder
+        var dbDirectory = Path.Combine(AppContext.BaseDirectory, "Database");
+        var dbPath = Path.Combine(dbDirectory, "Database.db");
+
+        // Ensure directory exists before SQLite opens the file
+        if (!Directory.Exists(dbDirectory))
+            Directory.CreateDirectory(dbDirectory);
+
+        var connectionString = $"Data Source={dbPath};";
+
+        WorkSchedulerApp.Database.DatabaseHandler.Instance.Initialize(connectionString);
+
+        
         var collection = new ServiceCollection();
         collection.AddSingleton<MainViewModel>();
         collection.AddTransient<HomePageViewModel>();

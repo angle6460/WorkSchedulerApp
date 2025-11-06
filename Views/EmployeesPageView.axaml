@@ -1,8 +1,104 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="WorkSchedulerApp.Views.EmployeesPageView">
-    Welcome to Employees!
+﻿<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="clr-namespace:WorkSchedulerApp.ViewModels"
+    xmlns:svg="clr-namespace:Avalonia.Svg.Skia;assembly=Avalonia.Svg.Skia"
+    xmlns:m="clr-namespace:WorkSchedulerApp.Models"
+    mc:Ignorable="d"
+    d:DesignWidth="1100"
+    d:DesignHeight="800"
+    x:Class="WorkSchedulerApp.Views.EmployeesPageView"
+    x:DataType="vm:EmployeesPageViewModel"
+    Background="{DynamicResource PrimaryBackground}"
+    Foreground="{DynamicResource PrimaryForeground}">
+
+    <Design.DataContext>
+        <vm:EmployeesPageViewModel />
+    </Design.DataContext>
+
+    <Grid ColumnDefinitions="*, *" RowDefinitions="Auto, *">
+
+        <!-- ========================================================= -->
+        <!-- Header -->
+        <!-- ========================================================= -->
+        <Grid Name="HeaderGrid" Grid.ColumnSpan="2">
+            <svg:Svg Path="/Assets/Images/Banner.svg"
+                     Height="140"
+                     Stretch="UniformToFill" />
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Label HorizontalAlignment="Center" Content="Employees" Classes="h2" />
+                <Label HorizontalAlignment="Center"
+                       Content="Manage employee details and schedules"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- ========================================================= -->
+        <!-- Employee List -->
+        <!-- ========================================================= -->
+        <StackPanel Grid.Row="1" Grid.Column="0" Margin="25" Spacing="15">
+            <Label Classes="h2" Content="Employee List" />
+            <TextBlock Text="{Binding Employees.Count, StringFormat='Total: {0} employees'}"/>
+
+            <ListBox ItemsSource="{Binding Employees}"
+                     SelectedItem="{Binding SelectedEmployee, Mode=TwoWay}"
+                     Height="500"
+                     SelectionMode="Single">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="m:Employee">
+                        <Border Margin="2" Padding="6" CornerRadius="8" Background="{DynamicResource SecondaryBackground}">
+                            <StackPanel>
+                                <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding Role}" FontSize="12"/>
+                                <TextBlock Text="{Binding Availability}" FontSize="11"/>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Left">
+                <Button Content="Refresh" Command="{Binding LoadEmployeesCommand}" />
+                <Button Content="Delete Selected"
+                        Command="{Binding DeleteEmployeeCommand}"
+                        IsEnabled="{Binding CanDelete}" />
+            </StackPanel>
+        </StackPanel>
+
+        <!-- ========================================================= -->
+        <!-- Employee Detail / Form -->
+        <!-- ========================================================= -->
+        <StackPanel Grid.Row="1" Grid.Column="1" Margin="25" Spacing="15">
+            <Label Classes="h2" Content="Employee Details" />
+
+            <!-- Bind to EditingEmployee -->
+            <StackPanel DataContext="{Binding EditingEmployee}">
+                <TextBox Watermark="Full Name" Text="{Binding Name, Mode=TwoWay}" />
+                <TextBox Watermark="Role" Text="{Binding Role, Mode=TwoWay}" />
+                <NumericUpDown Minimum="0" Maximum="80" Value="{Binding RequestedHours, Mode=TwoWay}" />
+                <TextBox Watermark="Availability (e.g. Mon–Fri 9:00–17:00)"
+                         Text="{Binding Availability, Mode=TwoWay}" />
+                <TextBox Watermark="Contracted Hours"
+                         Text="{Binding ContractedHours, Mode=TwoWay}" />
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Left">
+                <Button Content="Add"
+                        Command="{Binding AddEmployeeCommand}"
+                        IsVisible="{Binding !BoolSelectedEmployee}" />
+
+                <Button Content="Update"
+                        Command="{Binding UpdateEmployeeCommand}"
+                        IsVisible="{Binding BoolSelectedEmployee}" />
+
+                <Button Content="Clear Fields"
+                        Command="{Binding ClearFieldsCommand}" />
+                <Button Command="{Binding DeleteEmployeeCommand}" IsVisible="{Binding BoolSelectedEmployee}" Classes="Alert">
+                    <Label Content="Delete"></Label>
+                </Button>
+            </StackPanel>
+        </StackPanel>
+
+    </Grid>
 </UserControl>

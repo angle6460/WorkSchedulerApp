@@ -1,0 +1,140 @@
+﻿@startuml
+title WorkSchedulerApp - Backend (Actual Directory Layout)
+
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+hide empty members
+
+' ============================================================
+' Packages reflecting your folders
+' ============================================================
+
+package "WorkSchedulerApp.Database" {
+    class DatabaseHandler {
+        - _connectionString : string
+        + Initialize(connectionString : string)
+        + InsertEmployee()
+        + InsertWorkLoad()
+        + InsertWorkGroup()
+        + InsertWeeklyWorkloadTemplate()
+        + CloneWeeklyWorkloadToSchedule()
+        + AssignEmployeeToSchedule()
+        + CRUD + Query Methods...()
+    }
+}
+
+package "WorkSchedulerApp.Models" {
+    class Employee {
+        + EmployeeID : string
+        + Name : string
+        + Role : string
+        + RequestedHours : int
+        + Availability : string
+        + ContractedHours : string
+        + Skills : List<IWorkLoad>
+    }
+}
+
+package "WorkSchedulerApp.Models.WorkLoads" {
+    interface IWorkLoad {
+        + Name : string
+        + Description : string
+        + EstimatedHours : int
+    }
+
+    class FixedWorkLoad {
+        + FixedHours : int
+    }
+
+    class PerEmployeeWorkLoad {
+        + MinutesPerEmployee : int
+        + NumberOfEmployees : int
+    }
+
+    class PerItemWorkLoad {
+        + MinutesPerItem : int
+        + NumberOfItems : int
+    }
+
+    class WorkGroup {
+        + Name : string
+        + SubWorkLoads : List<IWorkLoad>
+        + AddWorkLoad(w : IWorkLoad)
+        + RemoveWorkLoad(w : IWorkLoad)
+    }
+
+    IWorkLoad <|-- FixedWorkLoad
+    IWorkLoad <|-- PerEmployeeWorkLoad
+    IWorkLoad <|-- PerItemWorkLoad
+    WorkGroup o-- IWorkLoad
+}
+
+package "WorkSchedulerApp.Models.Scheduling" {
+    class WeeklyWorkload {
+        + WeeklyWorkloadID : int
+        + Name : string
+        + Description : string
+        + DailyWorkLoads : List<DayWorkload>
+    }
+
+    class DayWorkload {
+        + Day : string
+        + AssignedWorkLoads : List<IWorkLoad>
+    }
+
+    class WeeklySchedule {
+        + WeeklyScheduleID : int
+        + WeekStart : DateTime
+        + WeekEnd : DateTime
+        + Template : WeeklyWorkload
+    }
+
+    class EmployeeWeeklySchedule {
+        + WeeklyScheduleID : int
+        + EmployeeID : string
+    }
+
+    class EmployeeDailySchedule {
+        + EmployeeDailyScheduleID : int
+        + EmployeeID : string
+        + WeeklyScheduleID : int
+        + DayWorkloadID : int
+    }
+
+    class Shift {
+        + ShiftID : int
+        + StartTime : DateTime
+        + EndTime : DateTime
+        + Breaks : List<ShiftBreak>
+    }
+
+    class ShiftBreak {
+        + BreakID : int
+        + ShiftID : int
+        + BreakTime : DateTime
+    }
+
+    WeeklyWorkload "1" --> "*" DayWorkload
+    DayWorkload "*" --> "*" IWorkLoad
+    WeeklySchedule "1" --> "1" WeeklyWorkload : uses template >
+    WeeklySchedule "1" --> "*" EmployeeWeeklySchedule
+    WeeklySchedule "1" --> "*" EmployeeDailySchedule
+    Shift "1" --> "*" ShiftBreak
+}
+
+' ============================================================
+' Cross-Package Relations
+' ============================================================
+
+Employee "*" --> "*" IWorkLoad : "skills"
+Employee "1" --> "*" EmployeeWeeklySchedule
+DatabaseHandler ..> Employee
+DatabaseHandler ..> IWorkLoad
+DatabaseHandler ..> WeeklyWorkload
+DatabaseHandler ..> WeeklySchedule
+DatabaseHandler ..> WorkGroup
+DatabaseHandler ..> Shift
+DatabaseHandler ..> ShiftBreak
+
+@enduml

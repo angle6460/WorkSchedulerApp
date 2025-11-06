@@ -27,21 +27,21 @@ public partial class App : Application
     {
         var collection = new ServiceCollection();
         collection.AddSingleton<MainViewModel>();
-        collection.AddTransient<DailyWorkPageViewModel>();
-        collection.AddTransient<EmployeesPageViewModel>();
         collection.AddTransient<HomePageViewModel>();
-        collection.AddTransient<WeeklyWorkPageViewModel>();
-        collection.AddTransient<WorkPageViewModel>();
+        collection.AddTransient<WorkLoadsPageViewModel>();
+        collection.AddTransient<WeeklyWorkLoadsPageViewModel>();
+        collection.AddTransient<WeeklySchedulePageViewModel>();
+        collection.AddTransient<EmployeesPageViewModel>();
         collection.AddTransient<SettingsPageViewModel>();
 
         collection.AddSingleton<Func<ApplicationPageNames, PageViewModel>>(x => name => name switch
         {
             ApplicationPageNames.Home => x.GetRequiredService<HomePageViewModel>(),
-            ApplicationPageNames.DailyWork => x.GetRequiredService<DailyWorkPageViewModel>(),
+            ApplicationPageNames.WorkLoads => x.GetRequiredService<WorkLoadsPageViewModel>(),
+            ApplicationPageNames.WeeklyTemplates => x.GetRequiredService<WeeklyWorkLoadsPageViewModel>(),
+            ApplicationPageNames.WeeklySchedules => x.GetRequiredService<WeeklySchedulePageViewModel>(),
             ApplicationPageNames.Employees => x.GetRequiredService<EmployeesPageViewModel>(),
             ApplicationPageNames.Settings => x.GetRequiredService<SettingsPageViewModel>(),
-            ApplicationPageNames.WeeklyWork => x.GetRequiredService<WeeklyWorkPageViewModel>(),
-            ApplicationPageNames.Work => x.GetRequiredService<WorkPageViewModel>(),
             _ => throw new InvalidOperationException()
             
         });

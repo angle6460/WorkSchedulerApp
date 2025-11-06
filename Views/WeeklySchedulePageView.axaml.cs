@@ -4,9 +4,9 @@ using Avalonia.Markup.Xaml;
 
 namespace WorkSchedulerApp.Views;
 
-public partial class WeeklyWorkPageView : UserControl
+public partial class WeeklySchedulePageView : UserControl
 {
-    public WeeklyWorkPageView()
+    public WeeklySchedulePageView()
     {
         InitializeComponent();
     }

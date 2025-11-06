@@ -4,9 +4,9 @@ public enum ApplicationPageNames
 {
     Unknown,
     Home,
-    Work,
-    DailyWork,
-    WeeklyWork,
+    WorkLoads,
+    WeeklyTemplates,
+    WeeklySchedules,
     Employees,
     Settings
     

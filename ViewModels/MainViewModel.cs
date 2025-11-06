@@ -25,9 +25,9 @@ public partial class MainViewModel : ViewModelBase
     private PageViewModel _currentPage;
     
     public bool HomePageIsActive => CurrentPage.PageName == ApplicationPageNames.Home;
-    public bool WorkPageIsActive => CurrentPage.PageName == ApplicationPageNames.Work;
-    public bool DailyWorkPageIsActive => CurrentPage.PageName == ApplicationPageNames.DailyWork;
-    public bool WeeklyWorkPageIsActive => CurrentPage.PageName ==  ApplicationPageNames.WeeklyWork;
+    public bool WorkPageIsActive => CurrentPage.PageName == ApplicationPageNames.WorkLoads;
+    public bool DailyWorkPageIsActive => CurrentPage.PageName == ApplicationPageNames.WeeklyTemplates;
+    public bool WeeklyWorkPageIsActive => CurrentPage.PageName ==  ApplicationPageNames.WeeklySchedules;
     public bool EmployeesPageIsActive => CurrentPage.PageName == ApplicationPageNames.Employees;
     public bool SettingPageIsActive => CurrentPage.PageName == ApplicationPageNames.Settings;
     
@@ -64,19 +64,19 @@ public partial class MainViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void GoToWork()
+    private void GoToWorkLoads()
     {
-        CurrentPage = _pageFactory.GetPageViewModel(ApplicationPageNames.Work);    }
+        CurrentPage = _pageFactory.GetPageViewModel(ApplicationPageNames.WorkLoads);    }
 
     [RelayCommand]
-    private void GoToDailyWork()
+    private void GoToWeeklyTemplates()
     {
-        CurrentPage = _pageFactory.GetPageViewModel(ApplicationPageNames.DailyWork);    }
+        CurrentPage = _pageFactory.GetPageViewModel(ApplicationPageNames.WeeklyTemplates);    }
 
     [RelayCommand]
-    private void GoToWeeklyWork()
+    private void GoToWeeklySchedules()
     {
-        CurrentPage = _pageFactory.GetPageViewModel(ApplicationPageNames.WeeklyWork);    }
+        CurrentPage = _pageFactory.GetPageViewModel(ApplicationPageNames.WeeklySchedules);    }
 
     [RelayCommand]
     private void GoToEmployeesPage()

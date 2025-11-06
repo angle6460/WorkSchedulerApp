@@ -32,22 +32,22 @@
                                                         <Label Content="Home" IsVisible="{Binding SideMenuExpanded}"></Label>
                                                 </StackPanel>
                                         </Button>
-                                        <Button HorizontalAlignment="Stretch" Classes="Subtle" Classes.active="{Binding WorkPageIsActive}" Command="{Binding GoToWorkCommand}">
-                                                <StackPanel Orientation="Horizontal">
-                                                        <Label Classes="Icon" Content="&#xE80E;"></Label>
-                                                        <Label Content="Work" IsVisible="{Binding SideMenuExpanded}"></Label>
-                                                </StackPanel>
-                                        </Button>
-                                        <Button HorizontalAlignment="Stretch" Classes="Subtle" Classes.active="{Binding DailyWorkPageIsActive}" Command="{Binding GoToDailyWorkCommand}">
+                                        <Button HorizontalAlignment="Stretch" Classes="Subtle" Classes.active="{Binding WorkPageIsActive}" Command="{Binding GoToWorkLoadsCommand}">
                                                 <StackPanel Orientation="Horizontal">
                                                         <Label Classes="Icon" Content="&#xE7B2;"></Label>
-                                                        <Label Content="Daily Work" IsVisible="{Binding SideMenuExpanded}"></Label>
+                                                        <Label Content="Work Loads" IsVisible="{Binding SideMenuExpanded}"></Label>
                                                 </StackPanel>
                                         </Button>
-                                        <Button HorizontalAlignment="Stretch" Classes="Subtle" Classes.active="{Binding WeeklyWorkPageIsActive}" Command="{Binding GoToWeeklyWorkCommand}">
+                                        <Button HorizontalAlignment="Stretch" Classes="Subtle" Classes.active="{Binding DailyWorkPageIsActive}" Command="{Binding GoToWeeklyTemplatesCommand}">
                                                 <StackPanel Orientation="Horizontal">
                                                         <Label Classes="Icon" Content="&#xE7B4;"></Label>
-                                                        <Label Content="Weekly Work" IsVisible="{Binding SideMenuExpanded}"></Label>
+                                                        <Label Content="Weekly Templates" IsVisible="{Binding SideMenuExpanded}"></Label>
+                                                </StackPanel>
+                                        </Button>
+                                        <Button HorizontalAlignment="Stretch" Classes="Subtle" Classes.active="{Binding WeeklyWorkPageIsActive}" Command="{Binding GoToWeeklySchedulesCommand}">
+                                                <StackPanel Orientation="Horizontal">
+                                                        <Label Classes="Icon" Content="&#xE712;"></Label>
+                                                        <Label Content="Weekly Schedules" IsVisible="{Binding SideMenuExpanded}"></Label>
                                                 </StackPanel>
                                         </Button>
                                         <Button HorizontalAlignment="Stretch" Classes="Subtle" Classes.active="{Binding EmployeesPageIsActive}" Command="{Binding GoToEmployeesPageCommand}">

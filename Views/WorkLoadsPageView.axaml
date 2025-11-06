@@ -3,11 +3,11 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="WorkSchedulerApp.Views.WorkPageView"
+             x:Class="WorkSchedulerApp.Views.WorkLoadsPageView"
              xmlns:vm="clr-namespace:WorkSchedulerApp.ViewModels"
              xmlns:vewModels="clr-namespace:WorkSchedulerApp.ViewModels"
-             x:DataType="vm:WorkPageViewModel">
-    <Design.DataContext><vm:WorkPageViewModel></vm:WorkPageViewModel></Design.DataContext>
+             x:DataType="vm:WorkLoadsPageViewModel">
+    <Design.DataContext><vm:WorkLoadsPageViewModel></vm:WorkLoadsPageViewModel></Design.DataContext>
     
     <Label Content="WORK"></Label>
 </UserControl>

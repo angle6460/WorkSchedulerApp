@@ -10,6 +10,7 @@
 
     <ItemGroup>
         <PackageReference Include="Avalonia" Version="11.3.6" />
+        <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.6" />
         <PackageReference Include="Avalonia.Desktop" Version="11.3.6" />
         <PackageReference Include="Avalonia.Svg.Skia" Version="11.3.0" />
         <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.6" />
@@ -44,6 +45,10 @@
         <DependentUpon>MainView.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Scheduling\" />
     </ItemGroup>
     <PropertyGroup>
       <GenerateAssemblyInfo>false</GenerateAssemblyInfo>

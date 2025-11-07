@@ -1456,9 +1456,28 @@ public sealed class DatabaseHandler
             throw;
         }
     }
-    
+    public async Task<List<(string employeeId, string employeeName)>> GetEmployeesAssignedToWorkLoadInstanceAsync(int workLoadInstanceId)
+    {
+        var list = new List<(string, string)>();
 
+        await using var connection = await OpenConnectionAsync();
+        await using var cmd = connection.CreateCommand();
 
+        cmd.CommandText = """
+                              SELECT e.EmployeeID, e.Name
+                              FROM EmployeeWorkLoadInstanceAssignment a
+                              JOIN Employee e ON e.EmployeeID = a.EmployeeID
+                              WHERE a.WorkLoadInstanceID = @id;
+                          """;
+
+        cmd.Parameters.Add(new SqliteParameter("@id", workLoadInstanceId));
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+            list.Add((reader.GetString(0), reader.GetString(1)));
+
+        return list;
+    }
 
     
 

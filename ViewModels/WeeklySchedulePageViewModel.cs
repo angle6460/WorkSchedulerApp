@@ -2,6 +2,8 @@
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Text;
+using Avalonia.Controls;
 using WorkSchedulerApp.Data;
 using WorkSchedulerApp.Database;
 using WorkSchedulerApp.Scheduling;
@@ -13,36 +15,32 @@ public partial class WeeklySchedulePageViewModel : PageViewModel
     private readonly DatabaseHandler db;
 
     // Left pane: create schedule
-    [ObservableProperty]
-    private ObservableCollection<WeeklyTemplateSummary> templates = new();
-
-    [ObservableProperty]
-    private WeeklyTemplateSummary? selectedTemplate;
-
-    [ObservableProperty]
-    private DateTimeOffset? selectedStartDate = DateTimeOffset.Now;
+    [ObservableProperty] private ObservableCollection<WeeklyTemplateSummary> templates = new();
+    [ObservableProperty] private WeeklyTemplateSummary? selectedTemplate;
+    [ObservableProperty] private DateTimeOffset? selectedStartDate = DateTimeOffset.Now;
 
     // Right pane: schedules list
-    [ObservableProperty]
-    private ObservableCollection<WeeklyScheduleSummary> schedules = new();
+    [ObservableProperty] private ObservableCollection<WeeklyScheduleSummary> schedules = new();
+    [ObservableProperty] private WeeklyScheduleSummary? selectedSchedule;
 
-    [ObservableProperty]
-    private WeeklyScheduleSummary? selectedSchedule;
+    // Details panel
+    [ObservableProperty] private ObservableCollection<DayInstanceDetail> dayDetails = new();
 
-    // Details panel: days → workloads for the selected schedule
-    [ObservableProperty]
-    private ObservableCollection<DayInstanceDetail> dayDetails = new();
+    // ✅ NEW EXPORT COMMAND
+    public IAsyncRelayCommand ExportAssignedEmployeesCommand { get; }
 
     public WeeklySchedulePageViewModel()
     {
         PageName = ApplicationPageNames.WeeklySchedules;
         db = DatabaseHandler.Instance;
 
+        ExportAssignedEmployeesCommand = new AsyncRelayCommand(ExportAssignedEmployeesAsync);
+
         _ = LoadTemplatesAsync();
         _ = LoadSchedulesAsync();
     }
 
-    // Load weekly template list for schedule creation
+    // Load weekly template list
     [RelayCommand]
     public async Task LoadTemplatesAsync()
     {
@@ -59,21 +57,17 @@ public partial class WeeklySchedulePageViewModel : PageViewModel
         }
     }
 
-    // Load existing weekly schedule instances
+    // Load existing weekly schedules
     [RelayCommand]
     public async Task LoadSchedulesAsync()
     {
         Schedules.Clear();
-
-        // Make sure templates are loaded
         await LoadTemplatesAsync();
 
-        // Fetch instances
         var rows = await db.GetAllWeeklyWorkloadInstancesAsync();
 
         foreach (var (id, tmplId, start, end) in rows)
         {
-            // find template
             var tmpl = Templates.FirstOrDefault(t => t.Id == tmplId);
 
             Schedules.Add(new WeeklyScheduleSummary
@@ -87,21 +81,20 @@ public partial class WeeklySchedulePageViewModel : PageViewModel
         }
     }
 
-    // Create new weekly schedule from template
+    // Create new schedule
     [RelayCommand]
     public async Task CreateScheduleAsync()
     {
         if (SelectedTemplate == null || SelectedStartDate == null)
             return;
 
-        var start = SelectedStartDate.Value.Date;  // Convert to DateTime
+        var start = SelectedStartDate.Value.Date;
         var end = start.AddDays(6);
 
         int instanceId = await db.CloneWeeklyWorkloadTemplateToInstanceAsync(
             SelectedTemplate.Id, start, end
         );
 
-        // Add to list
         var summary = new WeeklyScheduleSummary
         {
             Id = instanceId,
@@ -112,7 +105,7 @@ public partial class WeeklySchedulePageViewModel : PageViewModel
         };
 
         Schedules.Add(summary);
-        SelectedSchedule = summary; // focus new schedule
+        SelectedSchedule = summary;
     }
 
     // Delete schedule
@@ -128,14 +121,7 @@ public partial class WeeklySchedulePageViewModel : PageViewModel
         DayDetails.Clear();
     }
 
-    // (kept for completeness; no longer used by UI)
-    [RelayCommand]
-    public void OpenSchedule()
-    {
-        // No-op; the UI shows details automatically
-    }
-
-    // Run auto assigner
+    // Auto Assign
     [RelayCommand]
     public async Task AutoAssignAsync()
     {
@@ -146,16 +132,16 @@ public partial class WeeklySchedulePageViewModel : PageViewModel
             db, SelectedSchedule.Id
         );
 
-        // Reload details to reflect any changes in assignments or hours if needed
         await LoadScheduleDetailsAsync();
     }
 
-    // When a schedule is selected, load its full details (days + workloads)
+    // When selection changes, load details
     partial void OnSelectedScheduleChanged(WeeklyScheduleSummary? value)
     {
         _ = LoadScheduleDetailsAsync();
     }
 
+    // Load full details for a selected schedule
     public async Task LoadScheduleDetailsAsync()
     {
         DayDetails.Clear();
@@ -163,22 +149,15 @@ public partial class WeeklySchedulePageViewModel : PageViewModel
         if (SelectedSchedule == null)
             return;
 
-        // 1) Get all day instances for this schedule
         var dayRows = await db.GetDayWorkloadInstancesForWeeklyInstanceAsync(SelectedSchedule.Id);
 
         foreach (var (dayInstanceId, dayName) in dayRows)
         {
-            var dayDetail = new DayInstanceDetail
-            {
-                DayName = dayName
-            };
-
-            // 2) Get workload instances for the day
+            var dayDetail = new DayInstanceDetail { DayName = dayName };
             var workloads = await db.GetWorkLoadInstancesForDayInstanceAsync(dayInstanceId);
 
             foreach (var (workLoadInstanceId, workLoadTemplateId) in workloads)
             {
-                // 3) Resolve template to display details (name, desc, type, estimated hours)
                 var tpl = await db.GetWorkLoadTemplateByIdAsync(workLoadTemplateId);
                 if (tpl.HasValue)
                 {
@@ -198,9 +177,64 @@ public partial class WeeklySchedulePageViewModel : PageViewModel
             DayDetails.Add(dayDetail);
         }
     }
+
+    // ✅ NEW EXPORT FUNCTION — NO SQL USED
+    private async Task ExportAssignedEmployeesAsync()
+    {
+        if (SelectedSchedule == null)
+            return;
+
+        // ✅ Build a path next to Database.db
+        var dbDirectory = Path.Combine(AppContext.BaseDirectory, "Database");
+
+        if (!Directory.Exists(dbDirectory))
+            Directory.CreateDirectory(dbDirectory);
+
+        string filePath = Path.Combine(
+            dbDirectory,
+            $"AssignedEmployees_Schedule_{SelectedSchedule.Id}.csv"
+        );
+
+        var sb = new StringBuilder();
+        sb.AppendLine("Employee,Task,Hours,Day");
+
+        // 1. Get the day instances for the selected schedule
+        var days = await db.GetDayWorkloadInstancesForWeeklyInstanceAsync(SelectedSchedule.Id);
+
+        foreach (var (dayInstanceId, dayName) in days)
+        {
+            // 2. Get workload instances for this day
+            var workloads = await db.GetWorkLoadInstancesForDayInstanceAsync(dayInstanceId);
+
+            foreach (var (wliId, tplId) in workloads)
+            {
+                // 3. Template info
+                var tpl = await db.GetWorkLoadTemplateByIdAsync(tplId);
+                if (tpl == null) continue;
+
+                var (taskName, desc, hours, type) = tpl.Value;
+
+                // 4. Assigned employees
+                var employees = await db.GetEmployeesAssignedToWorkLoadInstanceAsync(wliId);
+
+                foreach (var (empId, empName) in employees)
+                {
+                    sb.AppendLine($"{empName},{taskName},{hours},{dayName}");
+                }
+            }
+        }
+
+        // ✅ Save file next to Database.db
+        File.WriteAllText(filePath, sb.ToString());
+
+        Console.WriteLine($"✅ Exported assigned employees to: {filePath}");
+    }
+
 }
 
-// ===== UI models =====
+
+// ===== UI Models =====
+
 public class WeeklyScheduleSummary
 {
     public int Id { get; set; }

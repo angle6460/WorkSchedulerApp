@@ -114,6 +114,10 @@
                             Command="{Binding AutoAssignCommand}"
                             IsEnabled="{Binding SelectedSchedule}"
                             Margin="0,10,0,0"/>
+                    <Button Content="Export Assigned Employees"
+                            Command="{Binding ExportAssignedEmployeesCommand}"
+                            IsEnabled="{Binding SelectedSchedule}"
+                            Margin="0,10,0,0"/>
 
                     <Button Content="Delete Schedule"
                             Command="{Binding DeleteScheduleCommand}"

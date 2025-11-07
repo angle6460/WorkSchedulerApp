@@ -1,8 +1,70 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="WorkSchedulerApp.Views.WeeklySchedulePageView">
-    Welcome to Weekly!
+﻿<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:WorkSchedulerApp.ViewModels"
+    x:Class="WorkSchedulerApp.Views.WeeklySchedulePageView"
+    x:DataType="vm:WeeklySchedulePageViewModel"
+    Foreground="{DynamicResource PrimaryForeground}"
+    Background="{DynamicResource PrimaryBackground}">
+
+    <UserControl.DataContext>
+        <vm:WeeklySchedulePageViewModel/>
+    </UserControl.DataContext>
+
+    <Grid ColumnDefinitions="2*, 3*" Margin="20">
+
+        <!-- Left side: Create new schedule -->
+        <StackPanel Grid.Column="0" Spacing="15">
+            <TextBlock Text="Create Weekly Schedule" FontSize="20"/>
+
+            <TextBlock Text="Template:"/>
+            <ComboBox ItemsSource="{Binding Templates}"
+                      SelectedItem="{Binding SelectedTemplate}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:WeeklyTemplateSummary">
+                        <TextBlock Text="{Binding Name}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            
+
+            <TextBlock Text="Start Date:"/>
+            <DatePicker SelectedDate="{Binding SelectedStartDate}"/>
+
+            <Button Content="Create Schedule"
+                    Command="{Binding CreateScheduleCommand}"
+                    IsEnabled="{Binding SelectedTemplate}"/>
+        </StackPanel>
+
+        <!-- Right side: Existing schedules -->
+        <StackPanel Grid.Column="1" Spacing="10">
+            <TextBlock Text="Existing Schedules" FontSize="20"/>
+
+            <ListBox ItemsSource="{Binding Schedules}"
+                     SelectedItem="{Binding SelectedSchedule}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:WeeklyScheduleSummary">
+                        <StackPanel Margin="5">
+                            <TextBlock Text="{Binding Range}" FontWeight="Bold"/>
+                            <TextBlock Text="{Binding TemplateLabel}" FontSize="12"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <Button Content="Open Schedule"
+                    Command="{Binding OpenScheduleCommand}"
+                    IsEnabled="{Binding SelectedSchedule}"/>
+
+            <Button Content="Auto Assign Employees"
+                    Command="{Binding AutoAssignCommand}"
+                    IsEnabled="{Binding SelectedSchedule}"/>
+
+            <Button Content="Delete Schedule"
+                    Command="{Binding DeleteScheduleCommand}"
+                    IsEnabled="{Binding SelectedSchedule}"/>
+        </StackPanel>
+
+    </Grid>
+
 </UserControl>

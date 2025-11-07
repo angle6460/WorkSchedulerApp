@@ -1250,19 +1250,50 @@ public sealed class DatabaseHandler
         cmd.Parameters.Add(new SqliteParameter("@id", templateId));
         await cmd.ExecuteNonQueryAsync();
     }
+    public async Task<List<(int id, int templateId, string start, string end)>> 
+        GetAllWeeklyWorkloadInstancesAsync()
+    {
+        var result = new List<(int, int, string, string)>();
 
+        await using var connection = await OpenConnectionAsync();
+        await using var cmd = connection.CreateCommand();
 
+        cmd.CommandText = """
+                              SELECT WeeklyWorkloadInstanceID,
+                                     WeeklyWorkloadTemplateID,
+                                     StartDate,
+                                     EndDate
+                              FROM WeeklyWorkloadInstance;
+                          """;
 
+        await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            result.Add((
+                reader.GetInt32(0),
+                reader.GetInt32(1),
+                reader.GetString(2),
+                reader.GetString(3)
+            ));
+        }
 
+        return result;
+    }
+    public async Task DeleteWeeklyWorkloadInstanceAsync(int weeklyInstanceId)
+    {
+        await using var connection = await OpenConnectionAsync();
+        await using var cmd = connection.CreateCommand();
 
+        cmd.CommandText = """
+                              DELETE FROM WeeklyWorkloadInstance
+                              WHERE WeeklyWorkloadInstanceID = @id;
+                          """;
 
+        cmd.Parameters.Add(new SqliteParameter("@id", weeklyInstanceId));
 
-
+        await cmd.ExecuteNonQueryAsync();
+    }
 
     
-
-
-
-
 
 }

@@ -49,124 +49,178 @@ public sealed class DatabaseHandler
         await using var connection = await OpenConnectionAsync();
         await using var cmd = connection.CreateCommand();
         cmd.CommandText = """
-CREATE TABLE IF NOT EXISTS Employee (
-    EmployeeID TEXT PRIMARY KEY,
-    Name TEXT NOT NULL,
-    Role TEXT,
-    RequestedHours INTEGER,
-    Availability TEXT,
-    ContractedHours TEXT
-);
+    PRAGMA foreign_keys = ON;
 
-CREATE TABLE IF NOT EXISTS WorkLoadTemplate (
-    WorkLoadTemplateID INTEGER PRIMARY KEY AUTOINCREMENT,
-    Name TEXT NOT NULL,
-    Description TEXT,
-    EstimatedHours REAL NOT NULL,
-    WorkLoadType TEXT NOT NULL
-);
+    ----------------------------------------------------
+    -- EMPLOYEE
+    ----------------------------------------------------
+    CREATE TABLE IF NOT EXISTS Employee (
+        EmployeeID TEXT PRIMARY KEY,
+        Name TEXT NOT NULL,
+        Role TEXT,
+        RequestedHours INTEGER,
+        Availability TEXT,
+        ContractedHours TEXT
+    );
 
-CREATE TABLE IF NOT EXISTS PerEmployeeWorkLoadTemplate (
-    WorkLoadTemplateID INTEGER PRIMARY KEY,
-    MinutesPerEmployee INTEGER NOT NULL,
-    NumberOfEmployees INTEGER NOT NULL,
-    FOREIGN KEY (WorkLoadTemplateID) REFERENCES WorkLoadTemplate(WorkLoadTemplateID) ON DELETE CASCADE
-);
+    ----------------------------------------------------
+    -- WORKLOAD TEMPLATE (BASE)
+    ----------------------------------------------------
+    CREATE TABLE IF NOT EXISTS WorkLoadTemplate (
+        WorkLoadTemplateID INTEGER PRIMARY KEY AUTOINCREMENT,
+        Name TEXT NOT NULL,
+        Description TEXT,
+        EstimatedHours REAL NOT NULL,
+        WorkLoadType TEXT NOT NULL
+    );
 
-CREATE TABLE IF NOT EXISTS PerItemWorkLoadTemplate (
-    WorkLoadTemplateID INTEGER PRIMARY KEY,
-    MinutesPerItem INTEGER NOT NULL,
-    NumberOfItems INTEGER NOT NULL,
-    FOREIGN KEY (WorkLoadTemplateID) REFERENCES WorkLoadTemplate(WorkLoadTemplateID) ON DELETE CASCADE
-);
+    ----------------------------------------------------
+    -- WORKLOAD TEMPLATE SUBTYPES
+    ----------------------------------------------------
+    CREATE TABLE IF NOT EXISTS PerEmployeeWorkLoadTemplate (
+        WorkLoadTemplateID INTEGER PRIMARY KEY,
+        MinutesPerEmployee INTEGER NOT NULL,
+        NumberOfEmployees INTEGER NOT NULL,
+        FOREIGN KEY (WorkLoadTemplateID) REFERENCES WorkLoadTemplate(WorkLoadTemplateID) ON DELETE CASCADE
+    );
 
-CREATE TABLE IF NOT EXISTS FixedWorkLoadTemplate (
-    WorkLoadTemplateID INTEGER PRIMARY KEY,
-    FixedHours INTEGER NOT NULL,
-    FOREIGN KEY (WorkLoadTemplateID) REFERENCES WorkLoadTemplate(WorkLoadTemplateID) ON DELETE CASCADE
-);
+    CREATE TABLE IF NOT EXISTS PerItemWorkLoadTemplate (
+        WorkLoadTemplateID INTEGER PRIMARY KEY,
+        MinutesPerItem INTEGER NOT NULL,
+        NumberOfItems INTEGER NOT NULL,
+        FOREIGN KEY (WorkLoadTemplateID) REFERENCES WorkLoadTemplate(WorkLoadTemplateID) ON DELETE CASCADE
+    );
 
-CREATE TABLE IF NOT EXISTS EmployeeSkill (
-    EmployeeID TEXT NOT NULL,
-    WorkLoadTemplateID INTEGER NOT NULL,
-    PRIMARY KEY (EmployeeID, WorkLoadTemplateID),
-    FOREIGN KEY (EmployeeID) REFERENCES Employee(EmployeeID) ON DELETE CASCADE,
-    FOREIGN KEY (WorkLoadTemplateID) REFERENCES WorkLoadTemplate(WorkLoadTemplateID) ON DELETE CASCADE
-);
+    CREATE TABLE IF NOT EXISTS FixedWorkLoadTemplate (
+        WorkLoadTemplateID INTEGER PRIMARY KEY,
+        FixedHours INTEGER NOT NULL,
+        FOREIGN KEY (WorkLoadTemplateID) REFERENCES WorkLoadTemplate(WorkLoadTemplateID) ON DELETE CASCADE
+    );
 
-CREATE TABLE IF NOT EXISTS WorkGroup (
-    WorkGroupID INTEGER PRIMARY KEY AUTOINCREMENT,
-    Name TEXT NOT NULL
-);
+    ----------------------------------------------------
+    -- EMPLOYEE SKILLS (EMPLOYEE → WLT)
+    ----------------------------------------------------
+    CREATE TABLE IF NOT EXISTS EmployeeSkill (
+        EmployeeID TEXT NOT NULL,
+        WorkLoadTemplateID INTEGER NOT NULL,
+        PRIMARY KEY (EmployeeID, WorkLoadTemplateID),
+        FOREIGN KEY (EmployeeID) REFERENCES Employee(EmployeeID) ON DELETE CASCADE,
+        FOREIGN KEY (WorkLoadTemplateID) REFERENCES WorkLoadTemplate(WorkLoadTemplateID) ON DELETE CASCADE
+    );
 
-CREATE TABLE IF NOT EXISTS WorkGroupWorkLoadTemplate (
-    WorkGroupID INTEGER NOT NULL,
-    WorkLoadTemplateID INTEGER NOT NULL,
-    PRIMARY KEY (WorkGroupID, WorkLoadTemplateID),
-    FOREIGN KEY (WorkGroupID) REFERENCES WorkGroup(WorkGroupID) ON DELETE CASCADE,
-    FOREIGN KEY (WorkLoadTemplateID) REFERENCES WorkLoadTemplate(WorkLoadTemplateID) ON DELETE CASCADE
-);
+    ----------------------------------------------------
+    -- WORKGROUP (OPTIONAL GROUPING OF TEMPLATES)
+    ----------------------------------------------------
+    CREATE TABLE IF NOT EXISTS WorkGroup (
+        WorkGroupID INTEGER PRIMARY KEY AUTOINCREMENT,
+        Name TEXT NOT NULL
+    );
 
-CREATE TABLE IF NOT EXISTS WeeklyWorkloadTemplate (
-    WeeklyWorkloadTemplateID INTEGER PRIMARY KEY AUTOINCREMENT,
-    Name TEXT NOT NULL,
-    Description TEXT
-);
+    CREATE TABLE IF NOT EXISTS WorkGroupWorkLoadTemplate (
+        WorkGroupID INTEGER NOT NULL,
+        WorkLoadTemplateID INTEGER NOT NULL,
+        PRIMARY KEY (WorkGroupID, WorkLoadTemplateID),
+        FOREIGN KEY (WorkGroupID) REFERENCES WorkGroup(WorkGroupID) ON DELETE CASCADE,
+        FOREIGN KEY (WorkLoadTemplateID) REFERENCES WorkLoadTemplate(WorkLoadTemplateID) ON DELETE CASCADE
+    );
 
-CREATE TABLE IF NOT EXISTS DayWorkloadTemplate (
-    DayWorkloadTemplateID INTEGER PRIMARY KEY AUTOINCREMENT,
-    Day TEXT NOT NULL,
-    WeeklyWorkloadTemplateID INTEGER NOT NULL,
-    FOREIGN KEY (WeeklyWorkloadTemplateID) REFERENCES WeeklyWorkloadTemplate(WeeklyWorkloadTemplateID) ON DELETE CASCADE
-);
+    ----------------------------------------------------
+    -- WEEKLY WORKLOAD TEMPLATE
+    ----------------------------------------------------
+    CREATE TABLE IF NOT EXISTS WeeklyWorkloadTemplate (
+        WeeklyWorkloadTemplateID INTEGER PRIMARY KEY AUTOINCREMENT,
+        Name TEXT NOT NULL,
+        Description TEXT
+    );
 
-CREATE TABLE IF NOT EXISTS DayWorkloadTemplateWorkLoadTemplate (
-    DayWorkloadTemplateID INTEGER NOT NULL,
-    WorkLoadTemplateID INTEGER NOT NULL,
-    PRIMARY KEY (DayWorkloadTemplateID, WorkLoadTemplateID),
-    FOREIGN KEY (DayWorkloadTemplateID) REFERENCES DayWorkloadTemplate(DayWorkloadTemplateID) ON DELETE CASCADE,
-    FOREIGN KEY (WorkLoadTemplateID) REFERENCES WorkLoadTemplate(WorkLoadTemplateID) ON DELETE CASCADE
-);
+    ----------------------------------------------------
+    -- DAY WORKLOAD TEMPLATE
+    ----------------------------------------------------
+    CREATE TABLE IF NOT EXISTS DayWorkloadTemplate (
+        DayWorkloadTemplateID INTEGER PRIMARY KEY AUTOINCREMENT,
+        Day TEXT NOT NULL,
+        WeeklyWorkloadTemplateID INTEGER NOT NULL,
+        FOREIGN KEY (WeeklyWorkloadTemplateID) REFERENCES WeeklyWorkloadTemplate(WeeklyWorkloadTemplateID) ON DELETE CASCADE
+    );
 
-CREATE TABLE IF NOT EXISTS WeeklyWorkloadInstance (
-    WeeklyWorkloadInstanceID INTEGER PRIMARY KEY AUTOINCREMENT,
-    WeekStart DATE NOT NULL,
-    WeekEnd DATE NOT NULL,
-    WeeklyWorkloadTemplateID INTEGER NOT NULL,
-    FOREIGN KEY (WeeklyWorkloadTemplateID) REFERENCES WeeklyWorkloadTemplate(WeeklyWorkloadTemplateID) ON DELETE CASCADE
-);
+    ----------------------------------------------------
+    -- DAY TEMPLATE ↔ WORKLOAD TEMPLATE
+    ----------------------------------------------------
+    CREATE TABLE IF NOT EXISTS DayWorkloadTemplateWorkLoadTemplate (
+        DayWorkloadTemplateID INTEGER NOT NULL,
+        WorkLoadTemplateID INTEGER NOT NULL,
+        PRIMARY KEY (DayWorkloadTemplateID, WorkLoadTemplateID),
+        FOREIGN KEY (DayWorkloadTemplateID) REFERENCES DayWorkloadTemplate(DayWorkloadTemplateID) ON DELETE CASCADE,
+        FOREIGN KEY (WorkLoadTemplateID) REFERENCES WorkLoadTemplate(WorkLoadTemplateID) ON DELETE CASCADE
+    );
 
-CREATE TABLE IF NOT EXISTS DayWorkloadInstance (
-    DayWorkloadInstanceID INTEGER PRIMARY KEY AUTOINCREMENT,
-    Day TEXT NOT NULL,
-    WeeklyWorkloadInstanceID INTEGER NOT NULL,
-    DayWorkloadTemplateID INTEGER NOT NULL,
-    FOREIGN KEY (WeeklyWorkloadInstanceID) REFERENCES WeeklyWorkloadInstance(WeeklyWorkloadInstanceID) ON DELETE CASCADE,
-    FOREIGN KEY (DayWorkloadTemplateID) REFERENCES DayWorkloadTemplate(DayWorkloadTemplateID) ON DELETE CASCADE
-);
+    ----------------------------------------------------
+    -- WEEKLY WORKLOAD INSTANCE
+    ----------------------------------------------------
+    CREATE TABLE IF NOT EXISTS WeeklyWorkloadInstance (
+        WeeklyWorkloadInstanceID INTEGER PRIMARY KEY AUTOINCREMENT,
+        StartDate DATE NOT NULL,
+        EndDate DATE NOT NULL,
+        WeeklyWorkloadTemplateID INTEGER NOT NULL,
+        FOREIGN KEY (WeeklyWorkloadTemplateID) REFERENCES WeeklyWorkloadTemplate(WeeklyWorkloadTemplateID) ON DELETE CASCADE
+    );
 
-CREATE TABLE IF NOT EXISTS WorkLoadInstance (
-    WorkLoadInstanceID INTEGER PRIMARY KEY AUTOINCREMENT,
-    WorkLoadTemplateID INTEGER NOT NULL,
-    DayWorkloadInstanceID INTEGER NOT NULL,
-    WeeklyWorkloadInstanceID INTEGER NOT NULL,
-    EstimatedHours REAL,
-    FOREIGN KEY (WorkLoadTemplateID) REFERENCES WorkLoadTemplate(WorkLoadTemplateID) ON DELETE CASCADE,
-    FOREIGN KEY (DayWorkloadInstanceID) REFERENCES DayWorkloadInstance(DayWorkloadInstanceID) ON DELETE CASCADE,
-    FOREIGN KEY (WeeklyWorkloadInstanceID) REFERENCES WeeklyWorkloadInstance(WeeklyWorkloadInstanceID) ON DELETE CASCADE
-);
+    ----------------------------------------------------
+    -- DAY WORKLOAD INSTANCE
+    ----------------------------------------------------
+    CREATE TABLE IF NOT EXISTS DayWorkloadInstance (
+        DayWorkloadInstanceID INTEGER PRIMARY KEY AUTOINCREMENT,
+        Day TEXT NOT NULL,
+        WeeklyWorkloadInstanceID INTEGER NOT NULL,
+        DayWorkloadTemplateID INTEGER NOT NULL,
+        Date TEXT,
+        FOREIGN KEY (WeeklyWorkloadInstanceID) REFERENCES WeeklyWorkloadInstance(WeeklyWorkloadInstanceID) ON DELETE CASCADE,
+        FOREIGN KEY (DayWorkloadTemplateID) REFERENCES DayWorkloadTemplate(DayWorkloadTemplateID) ON DELETE CASCADE
+    );
 
-CREATE TABLE IF NOT EXISTS EmployeeWorkLoadInstanceAssignment (
-    AssignmentID INTEGER PRIMARY KEY AUTOINCREMENT,
-    EmployeeID TEXT NOT NULL,
-    WorkLoadInstanceID INTEGER NOT NULL,
-    UNIQUE (EmployeeID, WorkLoadInstanceID),
-    FOREIGN KEY (EmployeeID) REFERENCES Employee(EmployeeID) ON DELETE CASCADE,
-    FOREIGN KEY (WorkLoadInstanceID) REFERENCES WorkLoadInstance(WorkLoadInstanceID) ON DELETE CASCADE
-);
-""";
+    ----------------------------------------------------
+    -- WORKLOAD INSTANCE (LEAF NODES)
+    ----------------------------------------------------
+    CREATE TABLE IF NOT EXISTS WorkLoadInstance (
+        WorkLoadInstanceID INTEGER PRIMARY KEY AUTOINCREMENT,
+        WorkLoadTemplateID INTEGER NOT NULL,
+        DayWorkloadInstanceID INTEGER NOT NULL,
+        WeeklyWorkloadInstanceID INTEGER NOT NULL,
+        EstimatedHours REAL,
+        FOREIGN KEY (WorkLoadTemplateID) REFERENCES WorkLoadTemplate(WorkLoadTemplateID) ON DELETE CASCADE,
+        FOREIGN KEY (DayWorkloadInstanceID) REFERENCES DayWorkloadInstance(DayWorkloadInstanceID) ON DELETE CASCADE,
+        FOREIGN KEY (WeeklyWorkloadInstanceID) REFERENCES WeeklyWorkloadInstance(WeeklyWorkloadInstanceID) ON DELETE CASCADE
+    );
+
+    ----------------------------------------------------
+    -- EMPLOYEE ASSIGNMENT TO WORKLOAD INSTANCE
+    -- (THIS IS WHAT AutoAssigner USES!)
+    ----------------------------------------------------
+    CREATE TABLE IF NOT EXISTS EmployeeWorkLoadInstanceAssignment (
+        AssignmentID INTEGER PRIMARY KEY AUTOINCREMENT,
+        EmployeeID TEXT NOT NULL,
+        WorkLoadInstanceID INTEGER NOT NULL,
+        UNIQUE (EmployeeID, WorkLoadInstanceID),
+        FOREIGN KEY (EmployeeID) REFERENCES Employee(EmployeeID) ON DELETE CASCADE,
+        FOREIGN KEY (WorkLoadInstanceID) REFERENCES WorkLoadInstance(WorkLoadInstanceID) ON DELETE CASCADE
+    );
+
+    ----------------------------------------------------
+    -- GROUP COMPOSITE (Parent → Child in WorkLoadTemplate tree)
+    ----------------------------------------------------
+    CREATE TABLE IF NOT EXISTS GroupWorkLoadChild (
+        ParentWorkLoadTemplateID INTEGER NOT NULL,
+        ChildWorkLoadTemplateID  INTEGER NOT NULL,
+        PRIMARY KEY (ParentWorkLoadTemplateID, ChildWorkLoadTemplateID),
+        FOREIGN KEY (ParentWorkLoadTemplateID) REFERENCES WorkLoadTemplate(WorkLoadTemplateID) ON DELETE CASCADE,
+        FOREIGN KEY (ChildWorkLoadTemplateID) REFERENCES WorkLoadTemplate(WorkLoadTemplateID) ON DELETE CASCADE
+    );
+    """;
+
         await cmd.ExecuteNonQueryAsync();
     }
+
+
 
     public void Close() => SqliteConnection.ClearAllPools();
     // === EMPLOYEES =============================================================
@@ -220,17 +274,25 @@ CREATE TABLE IF NOT EXISTS EmployeeWorkLoadInstanceAssignment (
         await cmd.ExecuteNonQueryAsync();
     }
 
-    public async Task<List<(string id, string name, string role)>> GetAllEmployeesAsync()
+    public async Task<List<(string id, string name, string role, int requestedHours, string availability, string contractedHours)>> GetAllEmployeesAsync()
     {
-        var result = new List<(string, string, string)>();
+        var result = new List<(string, string, string, int, string, string)>();
         await using var connection = await OpenConnectionAsync();
         await using var cmd = connection.CreateCommand();
-        cmd.CommandText = "SELECT EmployeeID, Name, Role FROM Employee;";
+        cmd.CommandText = "SELECT EmployeeID, Name, Role, RequestedHours, Availability, ContractedHours FROM Employee;";
         await using var reader = await cmd.ExecuteReaderAsync();
         while (await reader.ReadAsync())
-            result.Add((reader.GetString(0), reader.GetString(1), reader.IsDBNull(2) ? "" : reader.GetString(2)));
+            result.Add((
+                reader.GetString(0),
+                reader.GetString(1),
+                reader.IsDBNull(2) ? "" : reader.GetString(2),
+                reader.IsDBNull(3) ? 0 : reader.GetInt32(3),
+                reader.IsDBNull(4) ? "" : reader.GetString(4),
+                reader.IsDBNull(5) ? "" : reader.GetString(5)
+            ));
         return result;
     }
+
 
     // === WORKLOAD TEMPLATES ====================================================
     public async Task<int> InsertPerEmployeeWorkLoadTemplateAsync(string name, string description, int minutesPerEmployee, int numberOfEmployees)
@@ -526,100 +588,119 @@ CREATE TABLE IF NOT EXISTS EmployeeWorkLoadInstanceAssignment (
     }
 
     // === INSTANCE LAYER =======================================================
-    public async Task<int> CloneWeeklyWorkloadTemplateToInstanceAsync(int weeklyWorkloadTemplateId, DateTime weekStart, DateTime weekEnd)
+    public async Task<int> CloneWeeklyWorkloadTemplateToInstanceAsync(
+    int weeklyWorkloadTemplateId,
+    DateTime startDate,
+    DateTime endDate)
+{
+    await using var connection = await OpenConnectionAsync();
+    await using var transaction = await connection.BeginTransactionAsync();
+
+    // 1) Create WeeklyWorkloadInstance
+    int weeklyInstanceId;
     {
-        await using var connection = await OpenConnectionAsync();
-        await using var tx = await connection.BeginTransactionAsync();
-        try
+        await using var cmd = connection.CreateCommand();
+        cmd.CommandText = """
+            INSERT INTO WeeklyWorkloadInstance (WeeklyWorkloadTemplateID, StartDate, EndDate)
+            VALUES (@tpl, @s, @e);
+            SELECT last_insert_rowid();
+        """;
+        cmd.Parameters.Add(new SqliteParameter("@tpl", weeklyWorkloadTemplateId));
+        cmd.Parameters.Add(new SqliteParameter("@s", startDate));
+        cmd.Parameters.Add(new SqliteParameter("@e", endDate));
+
+        weeklyInstanceId = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+    }
+
+    // 2) Fetch the day templates for this weekly template
+    //    (We need a map from DayWorkloadTemplateID → new DayWorkloadInstanceID)
+    var dayTemplateIds = new List<int>();
+    {
+        await using var cmd = connection.CreateCommand();
+        cmd.CommandText = """
+            SELECT DayWorkloadTemplateID
+            FROM DayWorkloadTemplate
+            WHERE WeeklyWorkloadTemplateID=@wk;
+        """;
+        cmd.Parameters.Add(new SqliteParameter("@wk", weeklyWorkloadTemplateId));
+
+        await using var r = await cmd.ExecuteReaderAsync();
+        while (await r.ReadAsync())
+            dayTemplateIds.Add(r.GetInt32(0));
+    }
+
+    // 3) Create DayWorkloadInstance rows and build a mapping
+    var instanceIdMap = new Dictionary<int, int>(); 
+    foreach (var dayTplId in dayTemplateIds)
+    {
+        await using var getDayNameCmd = connection.CreateCommand();
+        getDayNameCmd.CommandText = "SELECT Day FROM DayWorkloadTemplate WHERE DayWorkloadTemplateID=@id;";
+        getDayNameCmd.Parameters.Add(new SqliteParameter("@id", dayTplId));
+        var dayNameObj = await getDayNameCmd.ExecuteScalarAsync();
+        var dayName = dayNameObj?.ToString() ?? "Unknown";
+
+        await using var insertDayInstCmd = connection.CreateCommand();
+        insertDayInstCmd.CommandText = """
+                                           INSERT INTO DayWorkloadInstance 
+                                               (WeeklyWorkloadInstanceID, DayWorkloadTemplateID, Day, Date)
+                                           VALUES 
+                                               (@wkI, @tplId, @day, @date);
+                                           SELECT last_insert_rowid();
+                                       """;
+
+        insertDayInstCmd.Parameters.Add(new SqliteParameter("@wkI", weeklyInstanceId));
+        insertDayInstCmd.Parameters.Add(new SqliteParameter("@tplId", dayTplId));      // ✅ REQUIRED FIX
+        insertDayInstCmd.Parameters.Add(new SqliteParameter("@day", dayName));
+
+        // IMPORTANT: Replace this with your real date logic if needed
+        insertDayInstCmd.Parameters.Add(new SqliteParameter("@date", startDate));
+
+        int newDayInstanceId = Convert.ToInt32(await insertDayInstCmd.ExecuteScalarAsync());
+        instanceIdMap[dayTplId] = newDayInstanceId;
+    }
+
+
+    // 4) For each DayWorkloadTemplate → fetch WorkLoadTemplateIDs
+    //    Expand groups → insert one WorkLoadInstance per leaf
+    foreach (var dayTplId in dayTemplateIds)
+    {
+        await using var fetchCmd = connection.CreateCommand();
+        fetchCmd.CommandText = """
+            SELECT WorkLoadTemplateID 
+            FROM DayWorkLoadTemplateWorkLoadTemplate
+            WHERE DayWorkLoadTemplateID=@d;
+        """;
+        fetchCmd.Parameters.Add(new SqliteParameter("@d", dayTplId));
+
+        await using var r = await fetchCmd.ExecuteReaderAsync();
+        while (await r.ReadAsync())
         {
-            var insWeekly = connection.CreateCommand();
-            insWeekly.CommandText = """
-                INSERT INTO WeeklyWorkloadInstance (WeekStart, WeekEnd, WeeklyWorkloadTemplateID)
-                VALUES (@s, @e, @wk);
-                SELECT last_insert_rowid();
-            """;
-            insWeekly.Parameters.AddRange(new[]
+            var templateId = r.GetInt32(0);
+
+            // ✅ NEW: Expand groups into leaf templates
+            var leafTemplates = await ExpandToLeafTemplatesAsync(templateId);
+
+            foreach (var leaf in leafTemplates)
             {
-                new SqliteParameter("@s", weekStart),
-                new SqliteParameter("@e", weekEnd),
-                new SqliteParameter("@wk", weeklyWorkloadTemplateId)
-            });
-            var weeklyInstanceId = Convert.ToInt32(await insWeekly.ExecuteScalarAsync());
-
-            var getDays = connection.CreateCommand();
-            getDays.CommandText = """
-                SELECT DayWorkloadTemplateID, Day
-                FROM DayWorkloadTemplate
-                WHERE WeeklyWorkloadTemplateID=@wk
-                ORDER BY DayWorkloadTemplateID;
-            """;
-            getDays.Parameters.Add(new SqliteParameter("@wk", weeklyWorkloadTemplateId));
-
-            var dayTemplateMap = new List<(int templateId, string day)>();
-            await using (var reader = await getDays.ExecuteReaderAsync())
-            {
-                while (await reader.ReadAsync())
-                    dayTemplateMap.Add((reader.GetInt32(0), reader.GetString(1)));
-            }
-
-            var map = new Dictionary<int, int>();
-            foreach (var (tplId, dayName) in dayTemplateMap)
-            {
-                var insDay = connection.CreateCommand();
-                insDay.CommandText = """
-                    INSERT INTO DayWorkloadInstance (Day, WeeklyWorkloadInstanceID, DayWorkloadTemplateID)
-                    VALUES (@d, @wkI, @tpl);
-                    SELECT last_insert_rowid();
-                """;
-                insDay.Parameters.AddRange(new[]
-                {
-                    new SqliteParameter("@d", dayName),
-                    new SqliteParameter("@wkI", weeklyInstanceId),
-                    new SqliteParameter("@tpl", tplId)
-                });
-                var instanceId = Convert.ToInt32(await insDay.ExecuteScalarAsync());
-                map[tplId] = instanceId;
-            }
-
-            foreach (var (tplId, _) in dayTemplateMap)
-            {
-                var fetchCmd = connection.CreateCommand();
-                fetchCmd.CommandText = """
-                    SELECT WorkLoadTemplateID
-                    FROM DayWorkloadTemplateWorkLoadTemplate
-                    WHERE DayWorkloadTemplateID=@d;
-                """;
-                fetchCmd.Parameters.Add(new SqliteParameter("@d", tplId));
-
-                await using var rr = await fetchCmd.ExecuteReaderAsync();
-                while (await rr.ReadAsync())
-                {
-                    var templateId = rr.GetInt32(0);
-                    var insWork = connection.CreateCommand();
-                    insWork.CommandText = """
-                        INSERT INTO WorkLoadInstance
+                await using var insCmd = connection.CreateCommand();
+                insCmd.CommandText = """
+                    INSERT INTO WorkLoadInstance 
                         (WorkLoadTemplateID, DayWorkloadInstanceID, WeeklyWorkloadInstanceID)
-                        VALUES (@tpl, @dwi, @wkI);
-                    """;
-                    insWork.Parameters.AddRange(new[]
-                    {
-                        new SqliteParameter("@tpl", templateId),
-                        new SqliteParameter("@dwi", map[tplId]),
-                        new SqliteParameter("@wkI", weeklyInstanceId)
-                    });
-                    await insWork.ExecuteNonQueryAsync();
-                }
-            }
+                    VALUES (@tpl, @dayInst, @wkInst);
+                """;
+                insCmd.Parameters.Add(new SqliteParameter("@tpl", leaf));
+                insCmd.Parameters.Add(new SqliteParameter("@dayInst", instanceIdMap[dayTplId]));
+                insCmd.Parameters.Add(new SqliteParameter("@wkInst", weeklyInstanceId));
 
-            await tx.CommitAsync();
-            return weeklyInstanceId;
-        }
-        catch
-        {
-            await tx.RollbackAsync();
-            throw;
+                await insCmd.ExecuteNonQueryAsync();
+            }
         }
     }
+
+    await transaction.CommitAsync();
+    return weeklyInstanceId;
+}
+
 
     public async Task<List<(int dayWorkloadInstanceId, string day)>> GetDayWorkloadInstancesForWeeklyInstanceAsync(int weeklyInstanceId)
     {
@@ -946,7 +1027,239 @@ CREATE TABLE IF NOT EXISTS EmployeeWorkLoadInstanceAssignment (
             list.Add((r.GetInt32(0), r.GetString(1)));
         return list;
     }
+    public async Task<int> InsertGroupWorkLoadTemplateAsync(string name, string description = "")
+    {
+        await using var connection = await OpenConnectionAsync();
+        await using var cmd = connection.CreateCommand();
+        cmd.CommandText = """
+                              INSERT INTO WorkLoadTemplate (Name, Description, EstimatedHours, WorkLoadType)
+                              VALUES (@n, @d, 0.0, 'Group');
+                              SELECT last_insert_rowid();
+                          """;
+        cmd.Parameters.AddRange(new[]
+        {
+            new SqliteParameter("@n", name),
+            new SqliteParameter("@d", description)
+        });
+        return Convert.ToInt32(await cmd.ExecuteScalarAsync());
+    }
+    public async Task AddChildToGroupAsync(int parentGroupId, int childTemplateId)
+    {
+        await using var connection = await OpenConnectionAsync();
+        await using var cmd = connection.CreateCommand();
+        cmd.CommandText = """
+                              INSERT OR IGNORE INTO GroupWorkLoadChild (ParentWorkLoadTemplateID, ChildWorkLoadTemplateID)
+                              VALUES (@p, @c);
+                          """;
+        cmd.Parameters.AddRange(new[]
+        {
+            new SqliteParameter("@p", parentGroupId),
+            new SqliteParameter("@c", childTemplateId)
+        });
+        await cmd.ExecuteNonQueryAsync();
+    }
 
+    public async Task RemoveChildFromGroupAsync(int parentGroupId, int childTemplateId)
+    {
+        await using var connection = await OpenConnectionAsync();
+        await using var cmd = connection.CreateCommand();
+        cmd.CommandText = """
+                              DELETE FROM GroupWorkLoadChild
+                              WHERE ParentWorkLoadTemplateID=@p AND ChildWorkLoadTemplateID=@c;
+                          """;
+        cmd.Parameters.AddRange(new[]
+        {
+            new SqliteParameter("@p", parentGroupId),
+            new SqliteParameter("@c", childTemplateId)
+        });
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+    public async Task<List<int>> GetGroupChildrenAsync(int parentGroupId)
+    {
+        var ids = new List<int>();
+        await using var connection = await OpenConnectionAsync();
+        await using var cmd = connection.CreateCommand();
+        cmd.CommandText = """
+                              SELECT ChildWorkLoadTemplateID
+                              FROM GroupWorkLoadChild
+                              WHERE ParentWorkLoadTemplateID=@p
+                              ORDER BY ChildWorkLoadTemplateID;
+                          """;
+        cmd.Parameters.Add(new SqliteParameter("@p", parentGroupId));
+        await using var r = await cmd.ExecuteReaderAsync();
+        while (await r.ReadAsync()) ids.Add(r.GetInt32(0));
+        return ids;
+    }
+
+    public async Task<double> GetEstimatedHoursRecursiveAsync(int workLoadTemplateId)
+    {
+        var type = await GetWorkLoadTypeAsync(workLoadTemplateId);
+        if (type is null) return 0.0;
+
+        await using var connection = await OpenConnectionAsync();
+        if (!string.Equals(type, "Group", StringComparison.OrdinalIgnoreCase))
+        {
+            await using var leafCmd = connection.CreateCommand();
+            leafCmd.CommandText = "SELECT EstimatedHours FROM WorkLoadTemplate WHERE WorkLoadTemplateID=@id;";
+            leafCmd.Parameters.Add(new SqliteParameter("@id", workLoadTemplateId));
+            var v = await leafCmd.ExecuteScalarAsync();
+            return v is null ? 0.0 : Convert.ToDouble(v);
+        }
+
+        // Group: sum children recursively
+        var children = await GetGroupChildrenAsync(workLoadTemplateId);
+        double sum = 0.0;
+        foreach (var childId in children)
+            sum += await GetEstimatedHoursRecursiveAsync(childId);
+
+        // Optionally persist the computed value back to the group’s EstimatedHours for quick listing
+        await using (var upd = connection.CreateCommand())
+        {
+            upd.CommandText = "UPDATE WorkLoadTemplate SET EstimatedHours=@h WHERE WorkLoadTemplateID=@id;";
+            upd.Parameters.AddRange(new[]
+            {
+                new SqliteParameter("@h", sum),
+                new SqliteParameter("@id", workLoadTemplateId)
+            });
+            await upd.ExecuteNonQueryAsync();
+        }
+        return sum;
+    }
+    public async Task<List<int>> ExpandToLeafTemplatesAsync(int workLoadTemplateId)
+    {
+        var result = new List<int>();
+        var type = await GetWorkLoadTypeAsync(workLoadTemplateId);
+        if (type is null) return result;
+
+        if (!string.Equals(type, "Group", StringComparison.OrdinalIgnoreCase))
+        {
+            result.Add(workLoadTemplateId);
+            return result;
+        }
+
+        var children = await GetGroupChildrenAsync(workLoadTemplateId);
+        foreach (var child in children)
+            result.AddRange(await ExpandToLeafTemplatesAsync(child));
+        return result;
+    }
+    public async Task<string?> GetWorkLoadTypeAsync(int workLoadTemplateId)
+    {
+        await using var connection = await OpenConnectionAsync();
+        await using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT WorkLoadType FROM WorkLoadTemplate WHERE WorkLoadTemplateID=@id;";
+        cmd.Parameters.Add(new SqliteParameter("@id", workLoadTemplateId));
+        var o = await cmd.ExecuteScalarAsync();
+        return o?.ToString();
+    }
+    public async Task<double> SumAssignedHoursForEmployeeInWeek(string employeeId, int weeklyInstanceId)
+    {
+        await using var connection = await OpenConnectionAsync();
+        await using var cmd = connection.CreateCommand();
+
+        cmd.CommandText = """
+                              SELECT COALESCE(SUM(w.EstimatedHours), 0)
+                              FROM WorkLoadInstance w
+                              JOIN EmployeeWorkLoadInstanceAssignment a
+                                  ON a.WorkLoadInstanceID = w.WorkLoadInstanceID
+                              WHERE a.EmployeeID = @employeeId
+                                AND w.WeeklyWorkloadInstanceID = @weekInstanceId;
+                          """;
+
+        cmd.Parameters.Add(new SqliteParameter("@employeeId", employeeId));
+        cmd.Parameters.Add(new SqliteParameter("@weekInstanceId", weeklyInstanceId));
+
+        var result = await cmd.ExecuteScalarAsync();
+        return Convert.ToDouble(result);
+    }
+    public async Task<List<(int id, string name, string description, string type, double estimatedHours)>> 
+        GetWorkLoadTemplatesForDayAsync(int dayWorkloadTemplateId)
+    {
+        var result = new List<(int, string, string, string, double)>();
+
+        await using var connection = await OpenConnectionAsync();
+        await using var cmd = connection.CreateCommand();
+
+        cmd.CommandText = """
+                          SELECT w.WorkLoadTemplateID,
+                                 w.Name,
+                                 w.Description,
+                                 w.WorkLoadType,
+                                 w.EstimatedHours
+                          FROM DayWorkLoadTemplateWorkLoadTemplate d
+                          JOIN WorkLoadTemplate w 
+                               ON d.WorkLoadTemplateID = w.WorkLoadTemplateID
+                          WHERE d.DayWorkLoadTemplateID = @dayId;
+                          """;
+
+        cmd.Parameters.Add(new SqliteParameter("@dayId", dayWorkloadTemplateId));
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            result.Add((
+                reader.GetInt32(0),      // ID
+                reader.GetString(1),     // Name
+                reader.GetString(2),     // Description
+                reader.GetString(3),     // Type
+                reader.GetDouble(4)      // EstimatedHours
+            ));
+        }
+
+        return result;
+    }
+    public async Task RemoveWorkLoadTemplateFromDayAsync(int dayWorkloadTemplateId, int workLoadTemplateId)
+    {
+        await using var connection = await OpenConnectionAsync();
+        await using var cmd = connection.CreateCommand();
+
+        cmd.CommandText = """
+                              DELETE FROM DayWorkLoadTemplateWorkLoadTemplate
+                              WHERE DayWorkLoadTemplateID = @dayId
+                                AND WorkLoadTemplateID = @wltId;
+                          """;
+
+        cmd.Parameters.Add(new SqliteParameter("@dayId", dayWorkloadTemplateId));
+        cmd.Parameters.Add(new SqliteParameter("@wltId", workLoadTemplateId));
+
+        await cmd.ExecuteNonQueryAsync();
+    }
+    public async Task UpdateWeeklyWorkloadTemplateNameAsync(int templateId, string newName)
+    {
+        await using var connection = await OpenConnectionAsync();
+        await using var cmd = connection.CreateCommand();
+        cmd.CommandText = """
+                              UPDATE WeeklyWorkloadTemplate 
+                              SET Name = @name 
+                              WHERE WeeklyWorkloadTemplateID = @id;
+                          """;
+        cmd.Parameters.Add(new SqliteParameter("@name", newName));
+        cmd.Parameters.Add(new SqliteParameter("@id", templateId));
+        await cmd.ExecuteNonQueryAsync();
+    }
+    public async Task UpdateWeeklyWorkloadTemplateDescriptionAsync(int templateId, string newDescription)
+    {
+        await using var connection = await OpenConnectionAsync();
+        await using var cmd = connection.CreateCommand();
+        cmd.CommandText = """
+                              UPDATE WeeklyWorkloadTemplate 
+                              SET Description = @desc 
+                              WHERE WeeklyWorkloadTemplateID = @id;
+                          """;
+        cmd.Parameters.Add(new SqliteParameter("@desc", newDescription));
+        cmd.Parameters.Add(new SqliteParameter("@id", templateId));
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+
+
+
+
+
+
+
+
+    
 
 
 

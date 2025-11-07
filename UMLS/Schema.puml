@@ -1,0 +1,114 @@
+﻿@startuml
+skinparam linetype ortho
+hide circle
+
+title WorkSchedulerApp - Final C1 Composite Database Schema
+
+entity "WorkLoadTemplate" as WLT {
+    * WorkLoadTemplateID : INTEGER <<PK>>
+    --
+    Name : TEXT
+    Description : TEXT
+    WorkLoadType : TEXT  // Fixed, PerItem, PerEmployee, Group
+    EstimatedHours : REAL
+}
+
+entity "GroupWorkLoadChild" as GWC {
+    * ParentWorkLoadTemplateID : INTEGER <<PK,FK>>
+    * ChildWorkLoadTemplateID : INTEGER <<PK,FK>>
+}
+
+entity "Employee" as EMP {
+    * EmployeeID : INTEGER <<PK>>
+    --
+    Name : TEXT
+    ContractedHours : REAL
+    Availability : TEXT
+    RequestedHours : REAL
+}
+
+entity "EmployeeWorkLoadSkill" as EWS {
+    * EmployeeID : INTEGER <<PK,FK>>
+    * WorkLoadTemplateID : INTEGER <<PK,FK>>
+}
+
+entity "WeeklyWorkloadTemplate" as WWT {
+    * WeeklyWorkloadTemplateID : INTEGER <<PK>>
+    --
+    Name : TEXT
+    Description : TEXT
+}
+
+entity "DayWorkloadTemplate" as DWT {
+    * DayWorkloadTemplateID : INTEGER <<PK>>
+    --
+    WeeklyWorkloadTemplateID : INTEGER <<FK>>
+    Day : TEXT
+}
+
+entity "DayWorkLoadTemplateWorkLoadTemplate" as DWTWLT {
+    * DayWorkLoadTemplateWorkLoadTemplateID : INTEGER <<PK>>
+    --
+    DayWorkLoadTemplateID : INTEGER <<FK>>
+    WorkLoadTemplateID : INTEGER <<FK>>
+}
+
+entity "WeeklyWorkloadInstance" as WWI {
+    * WeeklyWorkloadInstanceID : INTEGER <<PK>>
+    --
+    WeeklyWorkloadTemplateID : INTEGER <<FK>>
+    StartDate : TEXT
+    EndDate : TEXT
+}
+
+entity "DayWorkloadInstance" as DWI {
+    * DayWorkloadInstanceID : INTEGER <<PK>>
+    --
+    WeeklyWorkloadInstanceID : INTEGER <<FK>>
+    Day : TEXT
+    Date : TEXT  // actual calendar date
+}
+
+entity "WorkLoadInstance" as WLI {
+    * WorkLoadInstanceID : INTEGER <<PK>>
+    --
+    WorkLoadTemplateID : INTEGER <<FK>>
+    DayWorkloadInstanceID : INTEGER <<FK>>
+    WeeklyWorkloadInstanceID : INTEGER <<FK>>
+    EmployeeID : INTEGER <<FK>>  // nullable
+}
+
+' -----------------------
+'   RELATIONSHIPS
+' -----------------------
+
+' Composite groups
+WLT "1" <-- "0..*" GWC : ParentWorkLoadTemplateID
+WLT "1" <-- "0..*" GWC : ChildWorkLoadTemplateID
+
+' Skills
+EMP "1" <-- "0..*" EWS : EmployeeID
+WLT "1" <-- "0..*" EWS : WorkLoadTemplateID
+
+' Weekly templates and day templates
+WWT "1" --> "0..*" DWT : WeeklyWorkloadTemplateID
+
+' Day template workload assignments
+DWT "1" --> "0..*" DWTWLT : DayWorkLoadTemplateID
+WLT "1" <-- "0..*" DWTWLT : WorkLoadTemplateID
+
+' Weekly instances
+WWT "1" --> "0..*" WWI : WeeklyWorkloadTemplateID
+
+' Day instances (cloned from DWT)
+WWI "1" --> "0..*" DWI : WeeklyWorkloadInstanceID
+
+' Workload instances (cloned and expanded leaves)
+WLT "1" <-- "0..*" WLI : WorkLoadTemplateID
+DWI "1" --> "0..*" WLI : DayWorkloadInstanceID
+WWI "1" --> "0..*" WLI : WeeklyWorkloadInstanceID
+
+' Workload instance assignment
+EMP "1" <-- "0..*" WLI : EmployeeID
+
+@enduml

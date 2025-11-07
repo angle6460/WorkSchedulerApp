@@ -4,7 +4,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:WorkSchedulerApp.ViewModels"
              xmlns:svg="clr-namespace:Avalonia.Svg.Skia;assembly=Avalonia.Svg.Skia"
-             xmlns:vewModels="clr-namespace:WorkSchedulerApp.ViewModels"
              mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="800"
              x:Class="WorkSchedulerApp.Views.SettingsPageView"
              x:DataType="vm:SettingsPageViewModel"
@@ -30,22 +29,15 @@
             <StackPanel>
                 <Label Classes="h2" Content="General"></Label>
                 <Grid ColumnDefinitions="*, 16, Auto" RowDefinitions="Auto, 16, Auto, 16, Auto">
-                    <!-- Release Licence -->
-                    <TextBlock TextWrapping="Wrap" Text="Remove licence of SchedulerApp from the machine and release the licence back to the server ready to be transferred to another machine"></TextBlock>
-                    <Button Grid.Row="0" Grid.Column="2" HorizontalAlignment="Stretch">
-                        <StackPanel Orientation="Horizontal">
-                            <Label Classes="Icon" Content="&#xe2fe;"></Label>
-                            <Label Content="Release License" ></Label>
-                        </StackPanel>
-                    </Button>
+                    
                     
                     <!-- Skip files -->
                     <TextBlock Grid.Column="0" Grid.Row="2" TextWrapping="Wrap" Text="Skip files if only Open, Save (Optional) and Close are valid actions."></TextBlock>
-                    <CheckBox Grid.Column="2" Grid.Row="2"></CheckBox>
+                    <CheckBox Grid.Column="2" Grid.Row="2" IsChecked="{Binding SkipFiles}"></CheckBox>
                     
                     <!-- Skip files -->
                     <TextBlock Grid.Column="0" Grid.Row="4" TextWrapping="Wrap" Text="Allow duplicate entries on the same file in project lists"></TextBlock>
-                    <CheckBox Grid.Column="2" Grid.Row="4"></CheckBox>
+                    <CheckBox Grid.Column="2" Grid.Row="4" IsChecked="{Binding AllowDuplicateEntries}"></CheckBox>
                 </Grid>
             </StackPanel>
             
@@ -57,7 +49,7 @@
                         <TextBlock TextWrapping="Wrap" Text="Add or remove the locations to search for Reporter Templates, Macros, Actions and other custom files or templates"></TextBlock>
                         <TextBlock TextWrapping="Wrap" Text="*All sub-directories will be search automatically"> </TextBlock>
                     </StackPanel>
-                    <Button Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch">
+                    <Button Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" Command="{Binding AddFolderCommand}">
                         <StackPanel Orientation="Horizontal">
                             <Label Classes="Icon" Content="&#xE258;"></Label>
                             <Label Content="Add Folder" ></Label>
@@ -72,47 +64,6 @@
         
         <!-- Right Side Content -->
         <StackPanel Grid.Row="1" Grid.Column="1" Spacing="15" Margin="25">
-            <!-- Scheduler Host -->
-            <StackPanel >
-                <Label Classes="h2" Content="Scheduler Host"></Label>
-                <TextBlock TextWrapping="Wrap">
-                    WorkScheduler can work locally on the current machine, or on any machine accessable over the network
-                    or even internet.
-                    <LineBreak/><LineBreak/>
-                    Enter the machines IP address, network name or localhost for this machine.
-                </TextBlock>
-                <ComboBox></ComboBox>
-                <Label Content="Connection Established"></Label>
-            </StackPanel>
-            <!-- Coles Enterprises -->
-            <StackPanel Spacing="15">
-                <Label Classes="h2" Content="Coles Enterprises"></Label>
-                <TextBlock TextWrapping="Wrap">
-                    If you are using Coles Enterprise enter the credentials below and test login. WorkScheduler can then
-                    automatically handle checking in and out files from Coles enterprise.
-                </TextBlock>
-                <Grid ColumnDefinitions="*, *, *">
-                    <ComboBox HorizontalAlignment="Stretch"></ComboBox>
-                    <TextBox Grid.Column="1"></TextBox>
-                    <TextBox Grid.Column="2"></TextBox>
-                </Grid>
-                <StackPanel Orientation="Horizontal">
-                    <Button HorizontalAlignment="Stretch">
-                        <StackPanel Orientation="Horizontal">
-                            <Label Classes="Icon" Content="&#xe23e;"></Label>
-                            <Label Content="Login" ></Label>
-                        </StackPanel>
-                    </Button>
-                    <Button HorizontalAlignment="Stretch">
-                        <StackPanel Orientation="Horizontal">
-                            <Label Classes="Icon" Content="&#xe094;"></Label>
-                            <Label Content="Refresh Vault" ></Label>
-                        </StackPanel>
-                    </Button>
-                </StackPanel>
-                <Label Content="Connection Established"></Label>
-                
-            </StackPanel>
             
             <!-- Settings Cache -->
             <StackPanel Spacing="15">
@@ -123,19 +74,19 @@
                     If you are Experiencing issues you can try clearing the cache.
                 </TextBlock>
                 <StackPanel Orientation="Horizontal">
-                    <Button HorizontalAlignment="Stretch" Classes="Alert">
+                    <Button HorizontalAlignment="Stretch" Classes="Alert" Command="{Binding ClearCacheCommand}">
                         <StackPanel Orientation="Horizontal">
                             <Label Classes="Icon" Content="&#xec54;"></Label>
                             <Label Content="Clear Cache" ></Label>
                         </StackPanel>
                     </Button>
-                    <Button HorizontalAlignment="Stretch">
+                    <Button HorizontalAlignment="Stretch" Command="{Binding ExportCacheCommand}">
                         <StackPanel Orientation="Horizontal">
                             <Label Classes="Icon" Content="&#xe5de;"></Label>
                             <Label Content="Export Cache" ></Label>
                         </StackPanel>
                     </Button>
-                    <Button HorizontalAlignment="Stretch">
+                    <Button HorizontalAlignment="Stretch" Command="{Binding ImportCacheCommand}">
                         <StackPanel Orientation="Horizontal">
                             <Label Classes="Icon" Content="&#xe20c;"></Label>
                             <Label Content="Import Cache" ></Label>

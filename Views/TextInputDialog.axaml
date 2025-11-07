@@ -1,0 +1,20 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Width="400" Height="180"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        x:Class="WorkSchedulerApp.Views.TextInputDialog">
+
+    <StackPanel Margin="20" Spacing="10">
+
+        <TextBlock x:Name="PromptText" FontSize="16"/>
+
+        <TextBox x:Name="InputBox" />
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+            <Button Content="OK"   Width="80" Click="Ok_Click"/>
+            <Button Content="Cancel" Width="80" Click="Cancel_Click"/>
+        </StackPanel>
+
+    </StackPanel>
+</Window>

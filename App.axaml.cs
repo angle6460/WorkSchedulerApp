@@ -1,4 +1,3 @@
-using System;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
@@ -23,7 +22,7 @@ public partial class App : Application
         AvaloniaXamlLoader.Load(this);
     }
 
-    public override void OnFrameworkInitializationCompleted()
+    public override async void OnFrameworkInitializationCompleted()
     {
         // Define database path under your project folder
         var dbDirectory = Path.Combine(AppContext.BaseDirectory, "Database");
@@ -34,8 +33,7 @@ public partial class App : Application
             Directory.CreateDirectory(dbDirectory);
 
         var connectionString = $"Data Source={dbPath};";
-
-        WorkSchedulerApp.Database.DatabaseHandler.Instance.Initialize(connectionString);
+        await WorkSchedulerApp.Database.DatabaseHandler.Instance.InitializeAsync(connectionString);
 
         
         var collection = new ServiceCollection();

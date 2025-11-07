@@ -1,8 +1,87 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="WorkSchedulerApp.Views.WeeklyWorkLoadsPageView">
-    Welcome to DailyWork!
+﻿<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:WorkSchedulerApp.ViewModels"
+    x:Class="WorkSchedulerApp.Views.WeeklyWorkLoadsPageView"
+    x:DataType="vm:WeeklyWorkLoadsPageViewModel"
+    Foreground="{DynamicResource PrimaryForeground}"
+    Background="{DynamicResource PrimaryBackground}">
+
+    <UserControl.DataContext>
+        <vm:WeeklyWorkLoadsPageViewModel/>
+    </UserControl.DataContext>
+
+    <Grid ColumnDefinitions="2*, 2*, 3*" Margin="20">
+
+        <!-- Left Column: Weekly Templates -->
+        <StackPanel Grid.Column="0" Spacing="10">
+            <TextBlock Text="Weekly Templates" FontSize="20"/>
+            <Button Content="Add Template" Command="{Binding AddWeeklyTemplateCommand}"/>
+
+            <ListBox ItemsSource="{Binding WeeklyTemplates}"
+                     SelectedItem="{Binding SelectedTemplate}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:WeeklyTemplateSummary">
+                        <StackPanel Margin="5">
+                            <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
+                            <TextBlock Text="{Binding Description}" FontSize="12"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <Button Content="Delete Template"
+                    Command="{Binding DeleteWeeklyTemplateCommand}"
+                    IsVisible="{Binding TemplateSelected}"/>
+            <Button Content="Rename"
+                    Command="{Binding RenameSelectedTemplateCommand}"
+                    IsVisible="{Binding TemplateSelected}"/>
+
+            <Button Content="Edit Description"
+                    Command="{Binding EditDescriptionCommand}"
+                    IsVisible="{Binding TemplateSelected}"/>
+
+        </StackPanel>
+
+        <!-- Middle Column: Days -->
+        <StackPanel Grid.Column="1" Spacing="10">
+            <TextBlock Text="Days" FontSize="20"/>
+
+            <ListBox ItemsSource="{Binding Days}"
+                     SelectedItem="{Binding SelectedDay}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:DayTemplateVM">
+                        <TextBlock Text="{Binding Name}" Margin="5"/>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </StackPanel>
+
+        <!-- Right Column: Workloads for Selected Day -->
+        <StackPanel Grid.Column="2" Spacing="10">
+            <TextBlock Text="Workloads" FontSize="20"/>
+
+            <ListBox ItemsSource="{Binding Workloads}"
+                     SelectedItem="{Binding SelectedWorkload}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:WorkLoadTemplateVM">
+                        <StackPanel Margin="5">
+                            <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
+                            <TextBlock Text="{Binding Description}" FontSize="12"/>
+                            <TextBlock Text="{Binding EstimatedHours}" FontSize="10"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <Button Content="Add Workload to Day"
+                    Command="{Binding AddWorkloadToDayCommand}"
+                    IsEnabled="{Binding SelectedDay}"/>
+
+            <Button Content="Remove Selected Workload"
+                    Command="{Binding RemoveSelectedWorkloadCommand}"
+                    IsEnabled="{Binding SelectedWorkload}"/>
+        </StackPanel>
+
+    </Grid>
 </UserControl>

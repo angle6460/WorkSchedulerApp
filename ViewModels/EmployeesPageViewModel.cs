@@ -27,48 +27,58 @@ public partial class EmployeesPageViewModel : PageViewModel
     {
         PageName = ApplicationPageNames.Employees;
         db = DatabaseHandler.Instance;
-        LoadEmployees();
+
+        // fire-and-forget initial load (keeps constructor sync for XAML)
+        _ = LoadEmployeesAsync();
     }
 
     // Always points to the object currently being edited
     public Employee EditingEmployee => SelectedEmployee ?? NewEmployee;
 
     public bool BoolSelectedEmployee => SelectedEmployee is not null;
-    
+
     public bool CanDelete => SelectedEmployee is not null;
 
     // -------------------------------
-    // CRUD Commands
+    // CRUD Commands (async)
     // -------------------------------
 
     [RelayCommand]
-    private void LoadEmployees()
+    private async Task LoadEmployeesAsync()
     {
         Employees.Clear();
-        foreach (var (id, name, role) in db.GetAllEmployees())
+
+        var rows = await db.GetAllEmployeesAsync();
+        Employees.Clear();
+
+        foreach (var (id, name, role, requested, availability, contracted) in rows)
         {
             Employees.Add(new Employee
             {
                 EmployeeId = id,
                 Name = name,
-                Role = role
+                Role = role,
+                RequestedHours = requested,
+                Availability = availability,
+                ContractedHours = contracted
             });
         }
+
     }
 
     [RelayCommand]
-    private void AddEmployee()
+    private async Task AddEmployeeAsync()
     {
         if (string.IsNullOrWhiteSpace(NewEmployee.Name))
         {
-            Console.WriteLine("⚠️ Name is required.");
+            Console.WriteLine("Name is required.");
             return;
         }
 
         try
         {
-            // EmployeeId is a GUID by default
-            db.InsertEmployee(
+            // EmployeeId should already be set (e.g., in model ctor as GUID).
+            await db.InsertEmployeeAsync(
                 NewEmployee.EmployeeId,
                 NewEmployee.Name,
                 NewEmployee.Role,
@@ -89,11 +99,11 @@ public partial class EmployeesPageViewModel : PageViewModel
     }
 
     [RelayCommand]
-    private void UpdateEmployee()
+    private async Task UpdateEmployeeAsync()
     {
         if (SelectedEmployee is null) return;
 
-        db.UpdateEmployee(
+        await db.UpdateEmployeeAsync(
             SelectedEmployee.EmployeeId,
             SelectedEmployee.Name,
             SelectedEmployee.Role,
@@ -102,16 +112,17 @@ public partial class EmployeesPageViewModel : PageViewModel
             SelectedEmployee.ContractedHours
         );
 
-        // Optional: refresh list
-        LoadEmployees();
+        // Optional: refresh list if your UI needs a clean reread
+        await LoadEmployeesAsync();
+        // Otherwise, the collection item is already updated via binding.
     }
 
     [RelayCommand]
-    private void DeleteEmployee()
+    private async Task DeleteEmployeeAsync()
     {
         if (SelectedEmployee is null) return;
 
-        db.DeleteEmployee(SelectedEmployee.EmployeeId);
+        await db.DeleteEmployeeAsync(SelectedEmployee.EmployeeId);
         Employees.Remove(SelectedEmployee);
         SelectedEmployee = null;
     }

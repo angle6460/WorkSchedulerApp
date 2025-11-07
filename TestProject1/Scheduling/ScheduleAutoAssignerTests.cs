@@ -16,8 +16,8 @@ namespace WorkSchedulerApp.TestProject1.Scheduling
             // 1️⃣ Create employees with skills
             var empA = "EMP_" + Guid.NewGuid().ToString("N");
             var empB = "EMP_" + Guid.NewGuid().ToString("N");
-            await db.InsertEmployeeAsync(empA, "Alice", "Cashier", 40, "Mon-Fri", "Full-Time");
-            await db.InsertEmployeeAsync(empB, "Bob", "Stocker", 40, "Mon-Fri", "Full-Time");
+            await db.InsertEmployeeAsync(empA, "Alice", "Cashier", 40, "Mon-Fri", "40");
+            await db.InsertEmployeeAsync(empB, "Bob", "Stocker", 40, "Mon-Fri", "40");
 
             // 2️⃣ Create workloads
             var tplCashier = await db.InsertFixedWorkLoadTemplateAsync("Register", "Cashiering", 2);

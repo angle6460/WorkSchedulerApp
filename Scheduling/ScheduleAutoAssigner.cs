@@ -1,58 +1,54 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using WorkSchedulerApp.Database;
+﻿using WorkSchedulerApp.Database;
 
 namespace WorkSchedulerApp.Scheduling
 {
     public static class ScheduleAutoAssigner
     {
         /// <summary>
-        /// Automatically assigns employees to workloads for a given WeeklySchedule.
-        /// Matches based on EmployeeSkill links (Employee ↔ WorkLoad).
+        /// Automatically assigns qualified employees to workload instances for a given weekly workload instance.
         /// </summary>
-        /// <param name="db">Database handler instance.</param>
-        /// <param name="weeklyScheduleId">The target WeeklySchedule to assign.</param>
-        /// <returns>List of (EmployeeID, WorkLoadID) assignments created.</returns>
-        public static List<(string employeeId, int workLoadId)> AssignEmployeesToWeeklySchedule(DatabaseHandler db, int weeklyScheduleId)
+        public static async Task<List<(string employeeId, int workLoadInstanceId)>> AssignEmployeesToWeeklyWorkloadInstanceAsync(
+            DatabaseHandler db, int weeklyWorkloadInstanceId)
         {
-            var employees = db.GetAllEmployees();
-            var skills = db.GetAllEmployeeSkills(); // (employeeId, workLoadId)
-            var daySchedules = db.GetDaySchedulesForWeeklySchedule(weeklyScheduleId); // (dayScheduleId, dayName)
-            var assignments = new List<(string, int)>();
+            var assignments = new List<(string employeeId, int workLoadInstanceId)>();
+            Console.WriteLine($"[AutoAssign] Starting assignment for weekly instance #{weeklyWorkloadInstanceId}");
 
-            Console.WriteLine($"[AutoAssign] Starting assignment for schedule #{weeklyScheduleId}");
+            // 1️⃣ Get day instances for the specified weekly instance
+            var dayInstances = await db.GetDayWorkloadInstancesForWeeklyInstanceAsync(weeklyWorkloadInstanceId);
 
-            foreach (var (dayScheduleId, dayName) in daySchedules)
+            foreach (var (dayWorkloadInstanceId, dayName) in dayInstances)
             {
-                var dayWorkloads = db.GetWorkLoadsForDaySchedule(dayScheduleId); // (workLoadId, name, type)
+                // 2️⃣ Get all workload instances for this day
+                var workLoadInstances = await db.GetWorkLoadInstancesForDayInstanceAsync(dayWorkloadInstanceId);
 
-                foreach (var (wlId, wlName, wlType) in dayWorkloads)
+                foreach (var (workLoadInstanceId, workLoadTemplateId) in workLoadInstances)
                 {
-                    // Find employees who have a matching skill for this workload
-                    var qualifiedEmployees = skills
-                        .Where(s => s.workLoadId == wlId)
-                        .Select(s => s.employeeId)
-                        .ToList();
+                    // 3️⃣ Find all employees skilled for this workload template
+                    var qualifiedEmployees = await db.GetEmployeesForTemplateSkillAsync(workLoadTemplateId);
 
                     if (qualifiedEmployees.Count > 0)
                     {
-                        // Pick first available employee (you can later balance by hours)
-                        var employeeId = qualifiedEmployees.First();
+                        // naive: assign the first qualified employee
+                        var (employeeId, _) = qualifiedEmployees.First();
 
-                        assignments.Add((employeeId, wlId));
-                        db.AssignEmployeeToWorkLoad(employeeId, wlId, dayScheduleId);
+                        await db.AssignEmployeeToWorkLoadInstanceAsync(employeeId, workLoadInstanceId);
+                        assignments.Add((employeeId, workLoadInstanceId));
 
-                        Console.WriteLine($"Assigned {employeeId} to {wlName} ({wlType}) on {dayName}");
+                        Console.WriteLine(
+                            $"[AutoAssign] Assigned {employeeId} to WorkLoadInstance {workLoadInstanceId} (template {workLoadTemplateId}) on {dayName}");
                     }
                     else
                     {
-                        Console.WriteLine($"[AutoAssign] No qualified employee for {wlName} ({wlType}) on {dayName}");
+                        // Optional: Log the missing assignment with template info
+                        var template = await db.GetWorkLoadTemplateByIdAsync(workLoadTemplateId);
+                        var templateName = template?.name ?? $"Template#{workLoadTemplateId}";
+
+                        Console.WriteLine($"[AutoAssign] No qualified employee for {templateName} on {dayName}");
                     }
                 }
             }
 
-            Console.WriteLine($"[AutoAssign] Completed schedule #{weeklyScheduleId}");
+            Console.WriteLine($"[AutoAssign] Completed assignments for instance #{weeklyWorkloadInstanceId}");
             return assignments;
         }
     }

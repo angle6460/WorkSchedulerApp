@@ -1,13 +1,191 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="WorkSchedulerApp.Views.WorkLoadsPageView"
-             xmlns:vm="clr-namespace:WorkSchedulerApp.ViewModels"
-             xmlns:vewModels="clr-namespace:WorkSchedulerApp.ViewModels"
-             x:DataType="vm:WorkLoadsPageViewModel">
-    <Design.DataContext><vm:WorkLoadsPageViewModel></vm:WorkLoadsPageViewModel></Design.DataContext>
-    
-    <Label Content="WORK"></Label>
+﻿<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:WorkSchedulerApp.ViewModels"
+    x:Class="WorkSchedulerApp.Views.WorkLoadsPageView"
+    x:DataType="vm:WorkLoadsPageViewModel"
+    Foreground="{DynamicResource PrimaryForeground}"
+    Background="{DynamicResource PrimaryBackground}">
+
+    <UserControl.DataContext>
+        <vm:WorkLoadsPageViewModel/>
+    </UserControl.DataContext>
+
+    <Grid Margin="20" ColumnDefinitions="2*, 3*" RowDefinitions="Auto, * , Auto">
+
+        <!-- ======================================================
+             LEFT SIDE — LIST + ADD BUTTONS
+        ======================================================= -->
+        <StackPanel Grid.Column="0" Grid.Row="0" Spacing="10">
+            <TextBlock Text="Workload Templates" FontSize="22" />
+
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Content="Add Fixed" 
+                        Command="{Binding AddFixedWorkloadCommand}"/>
+
+                <Button Content="Add Per-Item" 
+                        Command="{Binding AddPerItemWorkloadCommand}"/>
+
+                <Button Content="Add Per-Employee"
+                        Command="{Binding AddPerEmployeeWorkloadCommand}"/>
+
+                <Button Content="Add Group"
+                        Command="{Binding AddGroupWorkloadCommand}"/>
+            </StackPanel>
+        </StackPanel>
+
+        <ListBox Grid.Column="0" Grid.Row="1"
+                 ItemsSource="{Binding Workloads}"
+                 SelectedItem="{Binding SelectedWorkload}"
+                 Margin="0,10,10,0">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:WorkLoadVM">
+                    <StackPanel Margin="5">
+                        <TextBlock Text="{Binding TemplateName}" FontWeight="Bold"/>
+                        <TextBlock Text="{Binding WorkLoadType}" FontSize="11"/>
+                        <TextBlock Text="{Binding EstimatedHours, StringFormat='Hours: {0}'}" FontSize="11"/>
+
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+
+        <!-- ======================================================
+             RIGHT SIDE — WORKLOAD EDITOR
+        ======================================================= -->
+        <ScrollViewer Grid.Column="1" Grid.Row="1" Margin="20 0 0 0">
+            <StackPanel Spacing="12">
+
+                <!-- If none selected -->
+                <TextBlock Text="Select a workload to edit."
+                           IsVisible="{Binding SelectedWorkload, Converter={x:Static ObjectConverters.IsNull}}"
+                           FontStyle="Italic"/>
+
+                <!-- Editor panel -->
+                <StackPanel IsVisible="{Binding SelectedWorkload, Converter={x:Static ObjectConverters.IsNotNull}}">
+
+                    <TextBlock Text="Edit Workload" FontSize="20" Margin="0 0 0 10"/>
+
+                    <TextBlock Text="Name"/>
+                    <TextBox Text="{Binding SelectedWorkload.TemplateName}" />
+
+                    <TextBlock Text="Description"/>
+                    <TextBox Text="{Binding SelectedWorkload.TemplateDescription}" AcceptsReturn="True" Height="60"/>
+
+                    <TextBlock Text="Type"/>
+                    <TextBlock Text="{Binding SelectedWorkload.WorkLoadType}" FontWeight="Bold"/>
+
+
+                    <!-- ======================================================
+                         CONDITIONAL ENTRY FIELDS (NEW)
+                    ======================================================= -->
+
+                    <!-- FIXED WORKLOAD -->
+                    <StackPanel IsVisible="{Binding WorkLoadIsFixed}" Spacing="4" Margin="0 10 0 0">
+                        <TextBlock Text="Fixed Hours" />
+                        <TextBox Text="{Binding SelectedWorkload.EstimatedHours, Mode=TwoWay}" />
+                    </StackPanel>
+
+                    <!-- PER-ITEM WORKLOAD -->
+                    <StackPanel IsVisible="{Binding WorkLoadIsPerItem}" Spacing="6" Margin="0 10 0 0">
+                        <TextBlock Text="Minutes per item" />
+                        <TextBox Text="{Binding SelectedWorkload.HoursPerItem, Mode=TwoWay}" />
+
+                        <TextBlock Text="Number of items" />
+                        <TextBox Text="{Binding SelectedWorkload.ItemCount, Mode=TwoWay}" />
+
+                        <TextBlock Text="Total (Hours):" />
+                        <TextBlock FontWeight="Bold"
+                                   Text="{Binding SelectedWorkload.EstimatedHours}" />
+                    </StackPanel>
+
+                    <!-- PER-EMPLOYEE WORKLOAD -->
+                    <StackPanel IsVisible="{Binding WorkLoadIsPerEmployee}" Spacing="6" Margin="0 10 0 0">
+                        <TextBlock Text="Minutes per employee" />
+                        <TextBox Text="{Binding SelectedWorkload.HoursPerEmployee, Mode=TwoWay}" />
+
+                        <TextBlock Text="Number of employees" />
+                        <TextBox Text="{Binding SelectedWorkload.EmployeeCount, Mode=TwoWay}" />
+
+                        <TextBlock Text="Total (Hours):" />
+                        <TextBlock FontWeight="Bold"
+                                   Text="{Binding SelectedWorkload.EstimatedHours}" />
+                    </StackPanel>
+
+                    <!-- GROUP WORKLOAD (read only) -->
+                    <StackPanel IsVisible="{Binding WorkLoadIsGroup}" Spacing="4" Margin="0 10 0 0">
+                        <TextBlock Text="Estimated Hours (auto-calculated)" />
+                        <TextBlock FontWeight="Bold"
+                                   Text="{Binding SelectedWorkload.EstimatedHours}" />
+                    </StackPanel>
+
+
+                    <!-- ======================================================
+                         GROUP CHILDREN SECTION
+                    ======================================================= -->
+                    <Border BorderThickness="1" Padding="10" Margin="0,15,0,0"
+                            BorderBrush="Gray"
+                            IsVisible="{Binding WorkLoadIsGroup}">
+                        <StackPanel Spacing="6">
+
+                            <TextBlock Text="Group Children" FontSize="16"/>
+
+                            <ListBox ItemsSource="{Binding GroupChildren}"
+                                     SelectedItem="{Binding SelectedChild}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:WorkLoadVM">
+                                        <StackPanel Margin="4">
+                                            <TextBlock Text="{Binding TemplateName}" FontWeight="Bold"/>
+                                            <TextBlock Text="{Binding WorkLoadType}" FontSize="11"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+
+                                    <ComboBox Width="200"
+                                              ItemsSource="{Binding AvailableWorkloadsForGroup}"
+                                              SelectedItem="{Binding SelectedAvailableWorkload}">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:WorkLoadVM">
+                                                <TextBlock Text="{Binding TemplateName}" />
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+
+                                    <Button Content="Add Child"
+                                            Command="{Binding AddChildToGroupCommand}"
+                                            IsEnabled="{Binding SelectedAvailableWorkload}" />
+
+                                </StackPanel>
+
+                                <Button Content="Remove Selected" 
+                                        Command="{Binding RemoveSelectedChildCommand}"
+                                        IsEnabled="{Binding SelectedChild}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                </StackPanel>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ======================================================
+             SAVE / DELETE BUTTONS
+        ======================================================= -->
+        <StackPanel Grid.Column="1" Grid.Row="2" Orientation="Horizontal" Spacing="15">
+            <Button Content="Save"
+                    Command="{Binding SaveWorkloadCommand}"
+                    IsEnabled="{Binding SelectedWorkload}"/>
+
+            <Button Content="Delete"
+                    Command="{Binding DeleteWorkloadCommand}"
+                    IsEnabled="{Binding SelectedWorkload}"/>
+        </StackPanel>
+
+    </Grid>
 </UserControl>

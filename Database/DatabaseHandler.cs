@@ -1293,6 +1293,172 @@ public sealed class DatabaseHandler
 
         await cmd.ExecuteNonQueryAsync();
     }
+    public async Task<(string name, string description, double estimatedHours, string type,
+                   int minutesPerItem, int numberOfItems,
+                   int minutesPerEmployee, int numberOfEmployees)?> 
+    GetWorkLoadTemplateFullAsync(int id)
+    {
+        var baseRow = await GetWorkLoadTemplateByIdAsync(id);
+        if (baseRow is null)
+            return null;
+
+        var (name, description, est, type) = baseRow.Value;
+
+        int minutesPerItem = 0;
+        int numberOfItems = 0;
+        int minutesPerEmployee = 0;
+        int numberOfEmployees = 0;
+
+        await using var conn = await OpenConnectionAsync();
+
+        if (type == "PerItem")
+        {
+            var cmd = conn.CreateCommand();
+            cmd.CommandText = """
+                SELECT MinutesPerItem, NumberOfItems 
+                FROM PerItemWorkLoadTemplate 
+                WHERE WorkLoadTemplateID=@id
+            """;
+            cmd.Parameters.Add(new SqliteParameter("@id", id));
+
+            await using var r = await cmd.ExecuteReaderAsync();
+            if (await r.ReadAsync())
+            {
+                minutesPerItem = r.GetInt32(0);
+                numberOfItems = r.GetInt32(1);
+            }
+
+            est = (minutesPerItem * numberOfItems) / 60.0;
+        }
+        else if (type == "PerEmployee")
+        {
+            var cmd = conn.CreateCommand();
+            cmd.CommandText = """
+                SELECT MinutesPerEmployee, NumberOfEmployees 
+                FROM PerEmployeeWorkLoadTemplate 
+                WHERE WorkLoadTemplateID=@id
+            """;
+            cmd.Parameters.Add(new SqliteParameter("@id", id));
+
+            await using var r = await cmd.ExecuteReaderAsync();
+            if (await r.ReadAsync())
+            {
+                minutesPerEmployee = r.GetInt32(0);
+                numberOfEmployees = r.GetInt32(1);
+            }
+
+            est = (minutesPerEmployee * numberOfEmployees) / 60.0;
+        }
+
+        // ✅ Persist recalculated EstimatedHours
+        await using (var update = conn.CreateCommand())
+        {
+            update.CommandText = "UPDATE WorkLoadTemplate SET EstimatedHours=@h WHERE WorkLoadTemplateID=@id;";
+            update.Parameters.Add(new SqliteParameter("@h", est));
+            update.Parameters.Add(new SqliteParameter("@id", id));
+            await update.ExecuteNonQueryAsync();
+        }
+
+        return (name, description, est, type,
+                minutesPerItem, numberOfItems,
+                minutesPerEmployee, numberOfEmployees);
+    }
+
+    public async Task UpdatePerItemWorkLoadTemplateAsync(
+        int id, string name, string description, double hoursPerItem, int itemCount)
+    {
+        await using var conn = await OpenConnectionAsync();
+        await using var tx = await conn.BeginTransactionAsync();
+
+        try
+        {
+            // Base table
+            var baseCmd = conn.CreateCommand();
+            baseCmd.CommandText = """
+                                      UPDATE WorkLoadTemplate
+                                      SET Name=@n, Description=@d, EstimatedHours=@h
+                                      WHERE WorkLoadTemplateID=@id;
+                                  """;
+            baseCmd.Parameters.AddRange(new[]
+            {
+                new SqliteParameter("@id", id),
+                new SqliteParameter("@n", name),
+                new SqliteParameter("@d", description),
+                new SqliteParameter("@h", hoursPerItem * itemCount)
+            });
+            await baseCmd.ExecuteNonQueryAsync();
+
+            // Subtype table
+            var detailCmd = conn.CreateCommand();
+            detailCmd.CommandText = """
+                                        UPDATE PerItemWorkLoadTemplate
+                                        SET MinutesPerItem=@m, NumberOfItems=@c
+                                        WHERE WorkLoadTemplateID=@id;
+                                    """;
+            detailCmd.Parameters.AddRange(new[]
+            {
+                new SqliteParameter("@id", id),
+                new SqliteParameter("@m", (int)(hoursPerItem * 60)),
+                new SqliteParameter("@c", itemCount)
+            });
+            await detailCmd.ExecuteNonQueryAsync();
+
+            await tx.CommitAsync();
+        }
+        catch
+        {
+            await tx.RollbackAsync();
+            throw;
+        }
+    }
+    public async Task UpdatePerEmployeeWorkLoadTemplateAsync(
+        int id, string name, string description, double hoursPerEmployee, int employeeCount)
+    {
+        await using var conn = await OpenConnectionAsync();
+        await using var tx = await conn.BeginTransactionAsync();
+
+        try
+        {
+            var baseCmd = conn.CreateCommand();
+            baseCmd.CommandText = """
+                                      UPDATE WorkLoadTemplate
+                                      SET Name=@n, Description=@d, EstimatedHours=@h
+                                      WHERE WorkLoadTemplateID=@id;
+                                  """;
+            baseCmd.Parameters.AddRange(new[]
+            {
+                new SqliteParameter("@id", id),
+                new SqliteParameter("@n", name),
+                new SqliteParameter("@d", description),
+                new SqliteParameter("@h", hoursPerEmployee * employeeCount)
+            });
+            await baseCmd.ExecuteNonQueryAsync();
+
+            var detailCmd = conn.CreateCommand();
+            detailCmd.CommandText = """
+                                        UPDATE PerEmployeeWorkLoadTemplate
+                                        SET MinutesPerEmployee=@m, NumberOfEmployees=@c
+                                        WHERE WorkLoadTemplateID=@id;
+                                    """;
+            detailCmd.Parameters.AddRange(new[]
+            {
+                new SqliteParameter("@id", id),
+                new SqliteParameter("@m", (int)(hoursPerEmployee * 60)),
+                new SqliteParameter("@c", employeeCount)
+            });
+            await detailCmd.ExecuteNonQueryAsync();
+
+            await tx.CommitAsync();
+        }
+        catch
+        {
+            await tx.RollbackAsync();
+            throw;
+        }
+    }
+    
+
+
 
     
 

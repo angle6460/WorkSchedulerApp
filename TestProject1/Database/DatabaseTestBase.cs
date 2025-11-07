@@ -1,34 +1,47 @@
 ﻿using WorkSchedulerApp.Database;
 
-namespace WorkSchedulerApp.TestProject1.Database;
-
-public abstract class DatabaseTestBase
+namespace WorkSchedulerApp.TestProject1.Database
 {
-    protected static string TestDbPath = string.Empty;
-
-    [OneTimeSetUp]
-    public void GlobalSetup()
+    /// <summary>
+    /// Provides a base for all database-related integration tests.
+    /// Automatically creates and initializes a fresh SQLite database
+    /// for each test run using the new async DatabaseHandler.
+    /// </summary>
+    public abstract class DatabaseTestBase
     {
-        if (!string.IsNullOrEmpty(TestDbPath))
-            return; // reuse existing DB
+        protected static string TestDbPath = string.Empty;
+        protected static bool Initialized = false;
 
-        var baseDir = AppDomain.CurrentDomain.BaseDirectory;
-        var testDbDir = Path.Combine(baseDir, "TestDB");
-        Directory.CreateDirectory(testDbDir);
+        [OneTimeSetUp]
+        public async Task GlobalSetupAsync()
+        {
+            if (Initialized && !string.IsNullOrEmpty(TestDbPath))
+                return; // already set up once
 
-        TestDbPath = Path.Combine(testDbDir, $"TestDB_{Guid.NewGuid()}.db");
-        Console.WriteLine($"[TEST DB PATH] {TestDbPath}");
+            var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            var testDbDir = Path.Combine(baseDir, "TestDB");
+            Directory.CreateDirectory(testDbDir);
 
-        if (File.Exists(TestDbPath))
-            File.Delete(TestDbPath);
+            TestDbPath = Path.Combine(testDbDir, $"TestDB_{Guid.NewGuid()}.db");
+            Console.WriteLine($"[TEST DB PATH] {TestDbPath}");
 
-        DatabaseHandler.Instance.Initialize($"Data Source={TestDbPath};");
-        Assert.That(File.Exists(TestDbPath), Is.True, "Database file should exist after schema creation.");
-    }
+            if (File.Exists(TestDbPath))
+                File.Delete(TestDbPath);
 
-    [OneTimeTearDown]
-    public void Cleanup()
-    {
-        DatabaseHandler.Instance.Close();
+            // Initialize the database asynchronously
+            var db = await DatabaseHandler.Instance.InitializeAsync($"Data Source={TestDbPath};");
+
+            // Just to verify schema creation
+            Assert.That(File.Exists(TestDbPath), Is.True, "Database file should exist after schema creation.");
+
+            Initialized = true;
+        }
+
+        [OneTimeTearDown]
+        public void Cleanup()
+        {
+            DatabaseHandler.Instance.Close();
+            Console.WriteLine("[TEST DB CLOSED]");
+        }
     }
 }

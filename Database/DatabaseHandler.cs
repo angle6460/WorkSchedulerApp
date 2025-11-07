@@ -828,6 +828,128 @@ CREATE TABLE IF NOT EXISTS EmployeeWorkLoadInstanceAssignment (
         };
         return weekStart.Date.AddDays(offset);
     }
+    // === WORKLOAD TEMPLATE UPDATES & DELETION ====================================
+    public async Task UpdateWorkLoadTemplateAsync(int workLoadTemplateId, string name, string description, double estimatedHours)
+    {
+        await using var connection = await OpenConnectionAsync();
+        await using var cmd = connection.CreateCommand();
+        cmd.CommandText = """
+                              UPDATE WorkLoadTemplate
+                              SET Name=@n, Description=@d, EstimatedHours=@h
+                              WHERE WorkLoadTemplateID=@id;
+                          """;
+        cmd.Parameters.AddRange(new[]
+        {
+            new SqliteParameter("@id", workLoadTemplateId),
+            new SqliteParameter("@n", name),
+            new SqliteParameter("@d", description),
+            new SqliteParameter("@h", estimatedHours)
+        });
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+    public async Task DeleteWorkLoadTemplateAsync(int workLoadTemplateId)
+    {
+        await using var connection = await OpenConnectionAsync();
+        await using var cmd = connection.CreateCommand();
+        cmd.CommandText = "DELETE FROM WorkLoadTemplate WHERE WorkLoadTemplateID=@id;";
+        cmd.Parameters.Add(new SqliteParameter("@id", workLoadTemplateId));
+        await cmd.ExecuteNonQueryAsync();
+    }
+    // === WEEKLY WORKLOAD TEMPLATE CRUD ===========================================
+    public async Task<List<(int id, string name, string description)>> GetAllWeeklyWorkloadTemplatesAsync()
+    {
+        var list = new List<(int, string, string)>();
+        await using var connection = await OpenConnectionAsync();
+        await using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT WeeklyWorkloadTemplateID, Name, Description FROM WeeklyWorkloadTemplate;";
+        await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+            list.Add((reader.GetInt32(0), reader.GetString(1), reader.IsDBNull(2) ? "" : reader.GetString(2)));
+        return list;
+    }
+
+    public async Task UpdateWeeklyWorkloadTemplateAsync(int weeklyWorkloadTemplateId, string name, string description)
+    {
+        await using var connection = await OpenConnectionAsync();
+        await using var cmd = connection.CreateCommand();
+        cmd.CommandText = """
+                              UPDATE WeeklyWorkloadTemplate
+                              SET Name=@n, Description=@d
+                              WHERE WeeklyWorkloadTemplateID=@id;
+                          """;
+        cmd.Parameters.AddRange(new[]
+        {
+            new SqliteParameter("@id", weeklyWorkloadTemplateId),
+            new SqliteParameter("@n", name),
+            new SqliteParameter("@d", description)
+        });
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+    public async Task DeleteWeeklyWorkloadTemplateAsync(int weeklyWorkloadTemplateId)
+    {
+        await using var connection = await OpenConnectionAsync();
+        await using var cmd = connection.CreateCommand();
+        cmd.CommandText = "DELETE FROM WeeklyWorkloadTemplate WHERE WeeklyWorkloadTemplateID=@id;";
+        cmd.Parameters.Add(new SqliteParameter("@id", weeklyWorkloadTemplateId));
+        await cmd.ExecuteNonQueryAsync();
+    }
+    // === DAY WORKLOAD TEMPLATE CRUD =============================================
+    public async Task<List<(int id, string day, int weeklyWorkloadTemplateId)>> GetAllDayWorkloadTemplatesAsync()
+    {
+        var list = new List<(int, string, int)>();
+        await using var connection = await OpenConnectionAsync();
+        await using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT DayWorkloadTemplateID, Day, WeeklyWorkloadTemplateID FROM DayWorkloadTemplate;";
+        await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+            list.Add((reader.GetInt32(0), reader.GetString(1), reader.GetInt32(2)));
+        return list;
+    }
+
+    public async Task UpdateDayWorkloadTemplateAsync(int dayWorkloadTemplateId, string newDay)
+    {
+        await using var connection = await OpenConnectionAsync();
+        await using var cmd = connection.CreateCommand();
+        cmd.CommandText = "UPDATE DayWorkloadTemplate SET Day=@d WHERE DayWorkloadTemplateID=@id;";
+        cmd.Parameters.AddRange(new[]
+        {
+            new SqliteParameter("@id", dayWorkloadTemplateId),
+            new SqliteParameter("@d", newDay)
+        });
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+    public async Task DeleteDayWorkloadTemplateAsync(int dayWorkloadTemplateId)
+    {
+        await using var connection = await OpenConnectionAsync();
+        await using var cmd = connection.CreateCommand();
+        cmd.CommandText = "DELETE FROM DayWorkloadTemplate WHERE DayWorkloadTemplateID=@id;";
+        cmd.Parameters.Add(new SqliteParameter("@id", dayWorkloadTemplateId));
+        await cmd.ExecuteNonQueryAsync();
+    }
+    public async Task<List<(int id, string day)>> GetDayWorkloadTemplatesForWeeklyTemplateAsync(int weeklyWorkloadTemplateId)
+    {
+        var list = new List<(int, string)>();
+        await using var connection = await OpenConnectionAsync();
+        await using var cmd = connection.CreateCommand();
+        cmd.CommandText = """
+                              SELECT DayWorkloadTemplateID, Day
+                              FROM DayWorkloadTemplate
+                              WHERE WeeklyWorkloadTemplateID=@wk
+                              ORDER BY DayWorkloadTemplateID;
+                          """;
+        cmd.Parameters.Add(new SqliteParameter("@wk", weeklyWorkloadTemplateId));
+        await using var r = await cmd.ExecuteReaderAsync();
+        while (await r.ReadAsync())
+            list.Add((r.GetInt32(0), r.GetString(1)));
+        return list;
+    }
+
+
+
+
 
 
 }

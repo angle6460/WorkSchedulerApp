@@ -6,32 +6,44 @@ using WorkSchedulerApp.Database;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 
-
 namespace WorkSchedulerApp.ViewModels;
 
 public partial class WeeklyWorkLoadsPageViewModel : PageViewModel
 {
     private readonly DatabaseHandler db;
 
+    // Weekly templates
     [ObservableProperty]
     private ObservableCollection<WeeklyTemplateSummary> weeklyTemplates = new();
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(TemplateSelected))]
     private WeeklyTemplateSummary? selectedTemplate;
-    
+
     public bool TemplateSelected => selectedTemplate != null;
+
+    // Days in selected template
     [ObservableProperty]
     private ObservableCollection<DayTemplateVM> days = new();
 
     [ObservableProperty]
     private DayTemplateVM? selectedDay;
 
+    // Workloads attached to selected day
     [ObservableProperty]
     private ObservableCollection<WorkLoadTemplateVM> workloads = new();
 
     [ObservableProperty]
     private WorkLoadTemplateVM? selectedWorkload;
+
+    // ✅ NEW: all available workload templates
+    [ObservableProperty]
+    private ObservableCollection<WorkLoadTemplateVM> availableWorkloads = new();
+
+    // ✅ NEW: user-selected workload to add
+    [ObservableProperty]
+    private WorkLoadTemplateVM? selectedAvailableWorkload;
+
 
     public WeeklyWorkLoadsPageViewModel()
     {
@@ -39,6 +51,7 @@ public partial class WeeklyWorkLoadsPageViewModel : PageViewModel
         db = DatabaseHandler.Instance;
 
         _ = LoadWeeklyTemplatesAsync();
+        _ = LoadAvailableWorkloadsAsync();  // ✅ load all workload templates
     }
 
     // ------------------------------------------------------------
@@ -98,7 +111,7 @@ public partial class WeeklyWorkLoadsPageViewModel : PageViewModel
     }
 
     // ------------------------------------------------------------
-    // Load Days for Selected Template
+    // Load Days
     // ------------------------------------------------------------
     private async Task LoadDaysForTemplateAsync()
     {
@@ -127,7 +140,7 @@ public partial class WeeklyWorkLoadsPageViewModel : PageViewModel
     }
 
     // ------------------------------------------------------------
-    // Load Workloads for Selected Day
+    // Load workloads for selected day
     // ------------------------------------------------------------
     private async Task LoadWorkloadsForDayAsync()
     {
@@ -151,29 +164,44 @@ public partial class WeeklyWorkLoadsPageViewModel : PageViewModel
     }
 
     // ------------------------------------------------------------
-    // Add Workload to Day
+    // ✅ Load ALL available workload templates (for ComboBox)
+    // ------------------------------------------------------------
+    private async Task LoadAvailableWorkloadsAsync()
+    {
+        AvailableWorkloads.Clear();
+
+        var all = await db.GetAllWorkLoadTemplatesAsync();
+
+        foreach (var (id, name, type) in all)
+        {
+            AvailableWorkloads.Add(new WorkLoadTemplateVM
+            {
+                Id = id,
+                Name = name,
+                Type = type,
+                Description = "",      // no desc in DB — leave empty
+                EstimatedHours = 0     // not provided — default
+            });
+        }
+    }
+
+
+    // ------------------------------------------------------------
+    // ✅ Add selected workload to day (from ComboBox)
     // ------------------------------------------------------------
     [RelayCommand]
     public async Task AddWorkloadToDayAsync()
     {
-        if (SelectedDay == null)
+        if (SelectedDay == null || SelectedAvailableWorkload == null)
             return;
 
-        // TODO: open a dialog to pick workload
-        // For now, select first workload template as placeholder
-        var wltList = await db.GetAllWorkLoadTemplatesAsync();
-        if (wltList.Count == 0)
-            return;
-
-        int wltId = wltList.First().id;
-
-        await db.AddWorkLoadTemplateToDayAsync(SelectedDay.Id, wltId);
+        await db.AddWorkLoadTemplateToDayAsync(SelectedDay.Id, SelectedAvailableWorkload.Id);
 
         await LoadWorkloadsForDayAsync();
     }
 
     // ------------------------------------------------------------
-    // Remove Workload from Day
+    // Remove Workload
     // ------------------------------------------------------------
     [RelayCommand]
     public async Task RemoveSelectedWorkloadAsync()
@@ -185,13 +213,17 @@ public partial class WeeklyWorkLoadsPageViewModel : PageViewModel
 
         await LoadWorkloadsForDayAsync();
     }
+
+
+    // ------------------------------------------------------------
+    // Rename + Description Editing
+    // ------------------------------------------------------------
     [RelayCommand]
     public async Task RenameSelectedTemplateAsync()
     {
         if (SelectedTemplate == null)
             return;
 
-        // TODO: Replace with a real dialog later
         string? newName = await ShowTextInputDialogAsync(
             "Rename Template",
             "Enter new name:",
@@ -203,12 +235,10 @@ public partial class WeeklyWorkLoadsPageViewModel : PageViewModel
 
         await db.UpdateWeeklyWorkloadTemplateNameAsync(SelectedTemplate.Id, newName);
 
-        // Update locally so UI refreshes
         SelectedTemplate.Name = newName;
-
-        // Force UI update (because WeeklyTemplateSummary is not ObservableObject)
         WeeklyTemplates = new ObservableCollection<WeeklyTemplateSummary>(WeeklyTemplates);
     }
+
     [RelayCommand]
     public async Task EditDescriptionAsync()
     {
@@ -230,6 +260,7 @@ public partial class WeeklyWorkLoadsPageViewModel : PageViewModel
 
         WeeklyTemplates = new ObservableCollection<WeeklyTemplateSummary>(WeeklyTemplates);
     }
+
     private async Task<string?> ShowTextInputDialogAsync(string title, string prompt, string current)
     {
         var dialog = new WorkSchedulerApp.Views.TextInputDialog();
@@ -240,11 +271,8 @@ public partial class WeeklyWorkLoadsPageViewModel : PageViewModel
 
         return await dialog.ShowDialogAsync(mainWindow!);
     }
-
-
-
-
 }
+
 
 // ------------------------------------------------------------
 // Supporting ViewModels

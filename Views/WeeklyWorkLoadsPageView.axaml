@@ -61,6 +61,7 @@
         <StackPanel Grid.Column="2" Spacing="10">
             <TextBlock Text="Workloads" FontSize="20"/>
 
+            <!-- List of workloads assigned to the selected day -->
             <ListBox ItemsSource="{Binding Workloads}"
                      SelectedItem="{Binding SelectedWorkload}">
                 <ListBox.ItemTemplate>
@@ -74,14 +75,34 @@
                 </ListBox.ItemTemplate>
             </ListBox>
 
+            <!-- ✅ New ComboBox to pick a workload to add -->
+            <TextBlock Text="Add workload:" FontWeight="Bold" Margin="0,10,0,0" />
+
+            <ComboBox
+                ItemsSource="{Binding AvailableWorkloads}"
+                SelectedItem="{Binding SelectedAvailableWorkload}">
+        
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel>
+                            <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
+                            <TextBlock Text="{Binding Type}" FontSize="12"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+
+            <!-- Add workload to day button -->
             <Button Content="Add Workload to Day"
                     Command="{Binding AddWorkloadToDayCommand}"
                     IsEnabled="{Binding SelectedDay}"/>
 
+            <!-- Remove workload button -->
             <Button Content="Remove Selected Workload"
                     Command="{Binding RemoveSelectedWorkloadCommand}"
                     IsEnabled="{Binding SelectedWorkload}"/>
         </StackPanel>
+
 
     </Grid>
 </UserControl>

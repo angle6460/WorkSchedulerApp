@@ -1,5 +1,5 @@
 ﻿using WorkSchedulerApp.Database;
-
+using System.Globalization;
 namespace WorkSchedulerApp.Scheduling
 {
     public static class ScheduleAutoAssigner
@@ -10,8 +10,9 @@ namespace WorkSchedulerApp.Scheduling
         /// Automatically assigns employees to workload instances for a given weekly workload instance.
         /// Takes into account: contracted hours, requested hours, load balancing, multi-employee tasks.
         /// </summary>
-        public static async Task<List<(string employeeId, int workLoadInstanceId)>> AssignEmployeesToWeeklyWorkloadInstanceAsync(
-            DatabaseHandler db, int weeklyWorkloadInstanceId)
+        public static async Task<List<(string employeeId, int workLoadInstanceId)>>
+            AssignEmployeesToWeeklyWorkloadInstanceAsync(
+                DatabaseHandler db, int weeklyWorkloadInstanceId)
         {
             var assignments = new List<(string employeeId, int workLoadInstanceId)>();
 
@@ -35,7 +36,7 @@ namespace WorkSchedulerApp.Scheduling
 
                     // Determine how many employees should share this workload
                     int employeesNeeded = Math.Max(
-                        1, 
+                        1,
                         (int)Math.Ceiling(totalHours / MaxHoursPerEmployeePerTask)
                     );
 
@@ -44,11 +45,13 @@ namespace WorkSchedulerApp.Scheduling
 
                     if (ranked.Count == 0)
                     {
-                        Console.WriteLine($"[AutoAssign] No qualified employees for template {workLoadTemplateId} on {dayName}");
+                        Console.WriteLine(
+                            $"[AutoAssign] No qualified employees for template {workLoadTemplateId} on {dayName}");
                         continue;
                     }
 
-                    Console.WriteLine($"[AutoAssign] Assigning up to {employeesNeeded} employees for task {workLoadInstanceId} ({totalHours}h)");
+                    Console.WriteLine(
+                        $"[AutoAssign] Assigning up to {employeesNeeded} employees for task {workLoadInstanceId} ({totalHours}h)");
 
                     int assigned = 0;
 
@@ -99,27 +102,60 @@ namespace WorkSchedulerApp.Scheduling
             int workLoadTemplateId,
             int weeklyInstanceId)
         {
-            // Get all skilled employees
+            // Get all skilled employees for this template
             var qualified = await db.GetEmployeesForTemplateSkillAsync(workLoadTemplateId);
+            if (qualified == null || qualified.Count == 0)
+                return new List<(string employeeId, double score)>();
+
+            // Pull all employees once and index by id (avoid repeated queries + First())
+            var allEmployees = await db.GetAllEmployeesAsync();
+            var byId = allEmployees.ToDictionary(e => e.id, e => e);
 
             var scores = new List<(string employeeId, double score)>();
 
             foreach (var (employeeId, _) in qualified)
             {
-                var emp = (await db.GetAllEmployeesAsync()).First(e => e.id == employeeId);
+                if (!byId.TryGetValue(employeeId, out var emp))
+                {
+                    Console.WriteLine($"[Rank] Skipping unknown employeeId '{employeeId}'");
+                    continue;
+                }
 
-                double contracted = double.Parse(emp.contractedHours);   // from TEXT → double
-                double requested  = emp.requestedHours;                  // already an int
+                // Parse contracted hours safely (TEXT → double)
+                // Default to 0 if null/empty/invalid; log once so you can fix data later.
+                double contracted = 0.0;
+                var contractedRaw = emp.contractedHours;
 
+                if (!string.IsNullOrWhiteSpace(contractedRaw))
+                {
+                    if (!double.TryParse(contractedRaw, NumberStyles.Float, CultureInfo.InvariantCulture,
+                            out contracted))
+                    {
+                        // Try permissive parse using current culture as a fallback (e.g., "8,5")
+                        if (!double.TryParse(contractedRaw, NumberStyles.Float, CultureInfo.CurrentCulture,
+                                out contracted))
+                        {
+                            Console.WriteLine(
+                                $"[Rank] Invalid contractedHours '{contractedRaw}' for employee '{employeeId}'. Defaulting to 0.");
+                            contracted = 0.0;
+                        }
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"[Rank] Empty contractedHours for employee '{employeeId}'. Defaulting to 0.");
+                }
+
+                // requestedHours is already an int per your model; treat null as 0 if your model allows it
+                double requested = emp.requestedHours; // if nullable in your model, use: emp.requestedHours ?? 0
 
                 // Assigned hours this week
                 double assigned = await db.SumAssignedHoursForEmployeeInWeek(employeeId, weeklyInstanceId);
 
                 double remainingToContracted = Math.Max(0, contracted - assigned);
-                double remainingToRequested  = Math.Max(0, requested - assigned);
+                double remainingToRequested = Math.Max(0, requested - assigned);
 
                 double priorityScore;
-
                 if (assigned < contracted)
                 {
                     // Priority 1 — MUST get hours

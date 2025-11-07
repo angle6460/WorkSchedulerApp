@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace WorkSchedulerApp.Models
 {
@@ -11,8 +13,8 @@ namespace WorkSchedulerApp.Models
         public string Availability { get; set; } = string.Empty;
         public string ContractedHours { get; set; } = string.Empty;
 
-        // NEW: Skills used by the scheduler
-        public List<string> Skills { get; set; } = new();
+        // ✅ Skill IDs only (keeps model clean)
+        public List<int> SkillTemplateIds { get; set; } = new();
 
         public Employee() { }
 
@@ -31,31 +33,27 @@ namespace WorkSchedulerApp.Models
             return $"{Name} ({Role}) — {RequestedHours}h requested, {ContractedHours} contracted";
         }
 
-        // NEW: Convert ContractedHours string → numeric maximum
         public int GetMaxContractedHours()
         {
             if (int.TryParse(ContractedHours, out int val))
                 return val;
 
-            // fallback rules
             if (ContractedHours.Contains("Full", StringComparison.OrdinalIgnoreCase))
                 return 38;
             if (ContractedHours.Contains("Part", StringComparison.OrdinalIgnoreCase))
                 return 20;
-            return 10; // casual or unknown
+
+            return 10;
         }
+
         public bool IsAvailableOn(string day)
         {
             if (string.IsNullOrWhiteSpace(Availability))
                 return false;
 
-            // Normalize day input (e.g., "Monday" → "Mon")
             var shortDay = day[..3].ToLowerInvariant();
-
-            // Convert common formats into a list of available days
             var availability = Availability.ToLowerInvariant().Replace("–", "-");
 
-            // Handle ranges like "mon-fri"
             if (availability.Contains('-'))
             {
                 var parts = availability.Split('-', StringSplitOptions.RemoveEmptyEntries);
@@ -64,6 +62,7 @@ namespace WorkSchedulerApp.Models
                     var days = new[] { "mon", "tue", "wed", "thu", "fri", "sat", "sun" };
                     var startIdx = Array.IndexOf(days, parts[0].Trim());
                     var endIdx = Array.IndexOf(days, parts[1].Trim());
+
                     if (startIdx >= 0 && endIdx >= 0)
                     {
                         var range = startIdx <= endIdx
@@ -75,13 +74,12 @@ namespace WorkSchedulerApp.Models
                 }
             }
 
-            // Handle comma-separated list like "mon,tue,thu"
-            var allowedDays = availability.Split(',', StringSplitOptions.RemoveEmptyEntries)
+            var allowedDays = availability
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
                 .Select(x => x.Trim().Substring(0, 3))
                 .ToList();
 
             return allowedDays.Contains(shortDay);
         }
-
     }
 }

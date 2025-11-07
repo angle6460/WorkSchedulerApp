@@ -10,46 +10,53 @@ namespace WorkSchedulerApp.ViewModels;
 public partial class EmployeesPageViewModel : PageViewModel
 {
     [ObservableProperty]
-    private ObservableCollection<Employee> _employees = new();
+    private ObservableCollection<Employee> employees = new();
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(BoolSelectedEmployee))]
     [NotifyPropertyChangedFor(nameof(EditingEmployee))]
-    private Employee? _selectedEmployee;
+    private Employee? selectedEmployee;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(EditingEmployee))]
-    private Employee _newEmployee = new();
+    private Employee newEmployee = new();
+
+    // ✅ UI SKILLS LIST (ViewModel-owned)
+    [ObservableProperty]
+    private ObservableCollection<WorkLoadTemplateVM> skillsForUI = new();
+
+    // ✅ Available skills to add
+    [ObservableProperty]
+    private ObservableCollection<WorkLoadTemplateVM> availableSkills = new();
+
+    [ObservableProperty]
+    private WorkLoadTemplateVM? selectedAvailableSkill;
 
     private readonly DatabaseHandler db;
 
     public EmployeesPageViewModel()
     {
         PageName = ApplicationPageNames.Employees;
+
         db = DatabaseHandler.Instance;
 
-        // fire-and-forget initial load (keeps constructor sync for XAML)
         _ = LoadEmployeesAsync();
+        _ = LoadAvailableSkillsAsync();
     }
 
-    // Always points to the object currently being edited
     public Employee EditingEmployee => SelectedEmployee ?? NewEmployee;
-
     public bool BoolSelectedEmployee => SelectedEmployee is not null;
-
     public bool CanDelete => SelectedEmployee is not null;
 
-    // -------------------------------
-    // CRUD Commands (async)
-    // -------------------------------
-
+    // --------------------------------------------------------------------
+    // Load employees
+    // --------------------------------------------------------------------
     [RelayCommand]
     private async Task LoadEmployeesAsync()
     {
         Employees.Clear();
 
         var rows = await db.GetAllEmployeesAsync();
-        Employees.Clear();
 
         foreach (var (id, name, role, requested, availability, contracted) in rows)
         {
@@ -63,41 +70,125 @@ public partial class EmployeesPageViewModel : PageViewModel
                 ContractedHours = contracted
             });
         }
-
     }
 
+    // --------------------------------------------------------------------
+    // Load all workload templates as "skills"
+    // --------------------------------------------------------------------
+    private async Task LoadAvailableSkillsAsync()
+    {
+        AvailableSkills.Clear();
+
+        var list = await db.GetAllWorkLoadTemplatesAsync();
+
+        foreach (var (id, name, type) in list)
+        {
+            AvailableSkills.Add(new WorkLoadTemplateVM
+            {
+                Id = id,
+                Name = name,
+                Type = type
+            });
+        }
+    }
+
+    // --------------------------------------------------------------------
+    // When selecting an employee, load their skills
+    // --------------------------------------------------------------------
+    partial void OnSelectedEmployeeChanged(Employee? emp)
+    {
+        if (emp != null)
+            _ = LoadSkillsForSelectedAsync();
+        else
+            SkillsForUI.Clear();
+    }
+
+    private async Task LoadSkillsForSelectedAsync()
+    {
+        SkillsForUI.Clear();
+
+        if (SelectedEmployee == null)
+            return;
+
+        var links = await db.GetAllEmployeeTemplateSkillsAsync();
+        var templates = await db.GetAllWorkLoadTemplatesAsync();
+
+        // Find all template IDs for this employee
+        foreach (var (employeeId, templateId) in links)
+        {
+            if (employeeId == SelectedEmployee.EmployeeId)
+            {
+                var tpl = templates.First(t => t.id == templateId);
+
+                SkillsForUI.Add(new WorkLoadTemplateVM
+                {
+                    Id = tpl.id,
+                    Name = tpl.name,
+                    Type = tpl.type
+                });
+            }
+        }
+    }
+
+    // --------------------------------------------------------------------
+    // Add skill
+    // --------------------------------------------------------------------
+    [RelayCommand]
+    public async Task AddSkillAsync()
+    {
+        if (SelectedEmployee == null || SelectedAvailableSkill == null)
+            return;
+
+        await db.AddTemplateSkillToEmployeeAsync(
+            SelectedEmployee.EmployeeId,
+            SelectedAvailableSkill.Id
+        );
+
+        await LoadSkillsForSelectedAsync();
+    }
+
+    // --------------------------------------------------------------------
+    // Remove skill
+    // --------------------------------------------------------------------
+    [RelayCommand]
+    public async Task RemoveSkillAsync(WorkLoadTemplateVM skill)
+    {
+        if (SelectedEmployee == null) return;
+
+        await db.RemoveTemplateSkillFromEmployeeAsync(
+            SelectedEmployee.EmployeeId,
+            skill.Id
+        );
+
+        await LoadSkillsForSelectedAsync();
+    }
+
+    // --------------------------------------------------------------------
+    // Add employee
+    // --------------------------------------------------------------------
     [RelayCommand]
     private async Task AddEmployeeAsync()
     {
         if (string.IsNullOrWhiteSpace(NewEmployee.Name))
-        {
-            Console.WriteLine("Name is required.");
             return;
-        }
 
-        try
-        {
-            // EmployeeId should already be set (e.g., in model ctor as GUID).
-            await db.InsertEmployeeAsync(
-                NewEmployee.EmployeeId,
-                NewEmployee.Name,
-                NewEmployee.Role,
-                NewEmployee.RequestedHours,
-                NewEmployee.Availability,
-                NewEmployee.ContractedHours
-            );
+        await db.InsertEmployeeAsync(
+            NewEmployee.EmployeeId,
+            NewEmployee.Name,
+            NewEmployee.Role,
+            NewEmployee.RequestedHours,
+            NewEmployee.Availability,
+            NewEmployee.ContractedHours
+        );
 
-            Employees.Add(NewEmployee);
-
-            // Reset form with a new GUID
-            NewEmployee = new Employee();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"❌ Error adding employee: {ex.Message}");
-        }
+        Employees.Add(NewEmployee);
+        NewEmployee = new();
+        SkillsForUI.Clear();
     }
 
+    // --------------------------------------------------------------------
+    // Update
+    // --------------------------------------------------------------------
     [RelayCommand]
     private async Task UpdateEmployeeAsync()
     {
@@ -112,25 +203,33 @@ public partial class EmployeesPageViewModel : PageViewModel
             SelectedEmployee.ContractedHours
         );
 
-        // Optional: refresh list if your UI needs a clean reread
         await LoadEmployeesAsync();
-        // Otherwise, the collection item is already updated via binding.
+        await LoadSkillsForSelectedAsync();
     }
 
+    // --------------------------------------------------------------------
+    // Delete
+    // --------------------------------------------------------------------
     [RelayCommand]
     private async Task DeleteEmployeeAsync()
     {
         if (SelectedEmployee is null) return;
 
         await db.DeleteEmployeeAsync(SelectedEmployee.EmployeeId);
+
         Employees.Remove(SelectedEmployee);
         SelectedEmployee = null;
+        SkillsForUI.Clear();
     }
 
+    // --------------------------------------------------------------------
+    // Clear fields
+    // --------------------------------------------------------------------
     [RelayCommand]
     private void ClearFields()
     {
         SelectedEmployee = null;
         NewEmployee = new Employee();
+        SkillsForUI.Clear();
     }
 }

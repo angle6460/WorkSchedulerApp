@@ -6,10 +6,8 @@
     x:DataType="vm:WeeklySchedulePageViewModel"
     Foreground="{DynamicResource PrimaryForeground}"
     Background="{DynamicResource PrimaryBackground}">
-
-    <UserControl.DataContext>
-        <vm:WeeklySchedulePageViewModel/>
-    </UserControl.DataContext>
+    
+    <Design.DataContext><vm:WeeklySchedulePageViewModel></vm:WeeklySchedulePageViewModel></Design.DataContext>
 
     <Grid ColumnDefinitions="2*, 3*" Margin="20">
 
@@ -26,7 +24,6 @@
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
-            
 
             <TextBlock Text="Start Date:"/>
             <DatePicker SelectedDate="{Binding SelectedStartDate}"/>
@@ -36,11 +33,15 @@
                     IsEnabled="{Binding SelectedTemplate}"/>
         </StackPanel>
 
-        <!-- Right side: Existing schedules -->
-        <StackPanel Grid.Column="1" Spacing="10">
-            <TextBlock Text="Existing Schedules" FontSize="20"/>
+        <!-- Right side: Existing schedules + detailed view -->
+        <Grid Grid.Column="1" RowDefinitions="Auto, *, Auto" RowSpacing="10">
 
-            <ListBox ItemsSource="{Binding Schedules}"
+            <!-- Title -->
+            <TextBlock Text="Existing Schedules" FontSize="20" Grid.Row="0"/>
+
+            <!-- List of schedules -->
+            <ListBox Grid.Row="1"
+                     ItemsSource="{Binding Schedules}"
                      SelectedItem="{Binding SelectedSchedule}">
                 <ListBox.ItemTemplate>
                     <DataTemplate x:DataType="vm:WeeklyScheduleSummary">
@@ -52,19 +53,77 @@
                 </ListBox.ItemTemplate>
             </ListBox>
 
-            <Button Content="Open Schedule"
-                    Command="{Binding OpenScheduleCommand}"
-                    IsEnabled="{Binding SelectedSchedule}"/>
+            <!-- Detailed schedule view -->
+            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" MaxHeight="500">
+                <StackPanel Spacing="12" Margin="5">
 
-            <Button Content="Auto Assign Employees"
-                    Command="{Binding AutoAssignCommand}"
-                    IsEnabled="{Binding SelectedSchedule}"/>
+                    <TextBlock Text="Schedule Details"
+                               FontSize="18"
+                               FontWeight="Bold"/>
 
-            <Button Content="Delete Schedule"
-                    Command="{Binding DeleteScheduleCommand}"
-                    IsEnabled="{Binding SelectedSchedule}"/>
-        </StackPanel>
+                    <TextBlock Text="{Binding SelectedSchedule.Range}" />
+                    <TextBlock Text="{Binding SelectedSchedule.TemplateLabel}" />
+
+                    <!-- Days List -->
+                    <ItemsControl ItemsSource="{Binding DayDetails}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:DayInstanceDetail">
+
+                                <StackPanel Margin="0,10,0,0">
+
+                                    <TextBlock Text="{Binding DayName}"
+                                               FontSize="16"
+                                               FontWeight="Bold"
+                                               Margin="0,5"/>
+
+                                    <!-- Workloads -->
+                                    <ItemsControl ItemsSource="{Binding Workloads}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:WorkLoadInstanceDetail">
+
+                                                <Border BorderThickness="1"
+                                                        Padding="5"
+                                                        Margin="5"
+                                                        CornerRadius="5"
+                                                        BorderBrush="{DynamicResource PrimaryForeground}">
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Name}"
+                                                                   FontWeight="Bold"/>
+                                                        <TextBlock Text="{Binding Description}"
+                                                                   FontSize="12"/>
+                                                        <TextBlock Text="{Binding Type}"
+                                                                   FontSize="10"
+                                                                   FontStyle="Italic"/>
+                                                        <TextBlock Text="{Binding EstimatedHours, StringFormat='Hours: {0:F1}'}"
+                                                                   FontSize="12"/>
+                                                    </StackPanel>
+                                                </Border>
+
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
+                                </StackPanel>
+
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- Actions -->
+                    <Button Content="Auto Assign Employees"
+                            Command="{Binding AutoAssignCommand}"
+                            IsEnabled="{Binding SelectedSchedule}"
+                            Margin="0,10,0,0"/>
+
+                    <Button Content="Delete Schedule"
+                            Command="{Binding DeleteScheduleCommand}"
+                            IsEnabled="{Binding SelectedSchedule}"/>
+
+                </StackPanel>
+            </ScrollViewer>
+
+
+        </Grid>
 
     </Grid>
-
 </UserControl>

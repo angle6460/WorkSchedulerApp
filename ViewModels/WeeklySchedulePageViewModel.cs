@@ -1,10 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
+using System.Linq;
 using WorkSchedulerApp.Data;
 using WorkSchedulerApp.Database;
 using WorkSchedulerApp.Scheduling;
-
 
 namespace WorkSchedulerApp.ViewModels;
 
@@ -12,6 +12,7 @@ public partial class WeeklySchedulePageViewModel : PageViewModel
 {
     private readonly DatabaseHandler db;
 
+    // Left pane: create schedule
     [ObservableProperty]
     private ObservableCollection<WeeklyTemplateSummary> templates = new();
 
@@ -21,11 +22,16 @@ public partial class WeeklySchedulePageViewModel : PageViewModel
     [ObservableProperty]
     private DateTimeOffset? selectedStartDate = DateTimeOffset.Now;
 
+    // Right pane: schedules list
     [ObservableProperty]
     private ObservableCollection<WeeklyScheduleSummary> schedules = new();
 
     [ObservableProperty]
     private WeeklyScheduleSummary? selectedSchedule;
+
+    // Details panel: days → workloads for the selected schedule
+    [ObservableProperty]
+    private ObservableCollection<DayInstanceDetail> dayDetails = new();
 
     public WeeklySchedulePageViewModel()
     {
@@ -81,7 +87,6 @@ public partial class WeeklySchedulePageViewModel : PageViewModel
         }
     }
 
-
     // Create new weekly schedule from template
     [RelayCommand]
     public async Task CreateScheduleAsync()
@@ -97,14 +102,17 @@ public partial class WeeklySchedulePageViewModel : PageViewModel
         );
 
         // Add to list
-        Schedules.Add(new WeeklyScheduleSummary
+        var summary = new WeeklyScheduleSummary
         {
             Id = instanceId,
             TemplateId = SelectedTemplate.Id,
             TemplateName = SelectedTemplate.Name,
             StartDate = start,
             EndDate = end
-        });
+        };
+
+        Schedules.Add(summary);
+        SelectedSchedule = summary; // focus new schedule
     }
 
     // Delete schedule
@@ -117,18 +125,14 @@ public partial class WeeklySchedulePageViewModel : PageViewModel
         await db.DeleteWeeklyWorkloadInstanceAsync(SelectedSchedule.Id);
         Schedules.Remove(SelectedSchedule);
         SelectedSchedule = null;
+        DayDetails.Clear();
     }
 
-    // Open schedule details
+    // (kept for completeness; no longer used by UI)
     [RelayCommand]
     public void OpenSchedule()
     {
-        if (SelectedSchedule == null)
-            return;
-
-        // TODO: implement navigation service
-        // Example:
-        // Navigation.Navigate(new WeeklySchedulePageViewModel(SelectedSchedule.Id));
+        // No-op; the UI shows details automatically
     }
 
     // Run auto assigner
@@ -142,10 +146,61 @@ public partial class WeeklySchedulePageViewModel : PageViewModel
             db, SelectedSchedule.Id
         );
 
-        // Optionally notify UI
+        // Reload details to reflect any changes in assignments or hours if needed
+        await LoadScheduleDetailsAsync();
+    }
+
+    // When a schedule is selected, load its full details (days + workloads)
+    partial void OnSelectedScheduleChanged(WeeklyScheduleSummary? value)
+    {
+        _ = LoadScheduleDetailsAsync();
+    }
+
+    public async Task LoadScheduleDetailsAsync()
+    {
+        DayDetails.Clear();
+
+        if (SelectedSchedule == null)
+            return;
+
+        // 1) Get all day instances for this schedule
+        var dayRows = await db.GetDayWorkloadInstancesForWeeklyInstanceAsync(SelectedSchedule.Id);
+
+        foreach (var (dayInstanceId, dayName) in dayRows)
+        {
+            var dayDetail = new DayInstanceDetail
+            {
+                DayName = dayName
+            };
+
+            // 2) Get workload instances for the day
+            var workloads = await db.GetWorkLoadInstancesForDayInstanceAsync(dayInstanceId);
+
+            foreach (var (workLoadInstanceId, workLoadTemplateId) in workloads)
+            {
+                // 3) Resolve template to display details (name, desc, type, estimated hours)
+                var tpl = await db.GetWorkLoadTemplateByIdAsync(workLoadTemplateId);
+                if (tpl.HasValue)
+                {
+                    var (name, desc, hours, type) = tpl.Value;
+
+                    dayDetail.Workloads.Add(new WorkLoadInstanceDetail
+                    {
+                        WorkLoadInstanceId = workLoadInstanceId,
+                        Name = name,
+                        Description = desc,
+                        Type = type,
+                        EstimatedHours = hours
+                    });
+                }
+            }
+
+            DayDetails.Add(dayDetail);
+        }
     }
 }
 
+// ===== UI models =====
 public class WeeklyScheduleSummary
 {
     public int Id { get; set; }
@@ -158,4 +213,17 @@ public class WeeklyScheduleSummary
     public string TemplateLabel => $"Template: {TemplateName}";
 }
 
+public class WorkLoadInstanceDetail
+{
+    public int WorkLoadInstanceId { get; set; }
+    public string Name { get; set; } = "";
+    public string Description { get; set; } = "";
+    public string Type { get; set; } = "";
+    public double EstimatedHours { get; set; }
+}
 
+public class DayInstanceDetail
+{
+    public string DayName { get; set; } = "";
+    public ObservableCollection<WorkLoadInstanceDetail> Workloads { get; set; } = new();
+}

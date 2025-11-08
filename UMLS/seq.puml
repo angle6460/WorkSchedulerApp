@@ -1,0 +1,41 @@
+@startuml
+skinparam shadowing false
+skinparam sequence {
+  ArrowColor black
+  ParticipantBorderColor black
+  ParticipantBackgroundColor #ddeeff
+  LifeLineBorderColor black
+  LifeLineBackgroundColor #f5f5f5
+}
+
+title Auto-Assign Workflow - Work Scheduler Application
+
+actor User
+
+participant "WeeklySchedulePageViewModel" as VM
+participant "ScheduleAutoAssigner <<Utility>>" as Auto
+participant "DatabaseHandler <<Singleton>>" as DB
+
+User -> VM : Clicks "Auto Assign"
+activate VM
+
+VM -> Auto : AssignEmployeesToWeeklyWorkloadInstanceAsync()
+activate Auto
+
+Auto -> DB : Query weekly workload instance data
+activate DB
+DB --> Auto : Return templates and employee info
+deactivate DB
+Auto -> Auto : Rank and assign employees
+
+Auto -> DB : Assign employees to workloads
+activate DB
+DB --> Auto : Confirm assignments saved
+deactivate DB
+
+Auto --> VM : Return assignment summary
+deactivate Auto
+
+VM --> User : Display updated schedule
+deactivate VM
+@enduml

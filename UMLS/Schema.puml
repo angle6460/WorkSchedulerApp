@@ -1,114 +1,106 @@
 ﻿@startuml
-skinparam linetype ortho
+!theme plain
 hide circle
+skinparam linetype ortho
 
-title WorkSchedulerApp - Final C1 Composite Database Schema
-
-entity "WorkLoadTemplate" as WLT {
-    * WorkLoadTemplateID : INTEGER <<PK>>
+entity Employee {
+    * EmployeeId : string <<PK>>
     --
-    Name : TEXT
-    Description : TEXT
-    WorkLoadType : TEXT  // Fixed, PerItem, PerEmployee, Group
-    EstimatedHours : REAL
+    Name : string
+    Role : string
+    RequestedHours : int
+    ContractedHours : string
+    Availability : string
 }
 
-entity "GroupWorkLoadChild" as GWC {
-    * ParentWorkLoadTemplateID : INTEGER <<PK,FK>>
-    * ChildWorkLoadTemplateID : INTEGER <<PK,FK>>
-}
-
-entity "Employee" as EMP {
-    * EmployeeID : INTEGER <<PK>>
+entity WorkLoadTemplate {
+    * Id : int <<PK>>
     --
-    Name : TEXT
-    ContractedHours : REAL
-    Availability : TEXT
-    RequestedHours : REAL
+    Name : string
+    Description : string
+    Type : string
+    EstimatedHours : double
 }
 
-entity "EmployeeWorkLoadSkill" as EWS {
-    * EmployeeID : INTEGER <<PK,FK>>
-    * WorkLoadTemplateID : INTEGER <<PK,FK>>
-}
-
-entity "WeeklyWorkloadTemplate" as WWT {
-    * WeeklyWorkloadTemplateID : INTEGER <<PK>>
+entity WeeklyWorkloadTemplate {
+    * Id : int <<PK>>
     --
-    Name : TEXT
-    Description : TEXT
+    Name : string
+    Description : string
 }
 
-entity "DayWorkloadTemplate" as DWT {
-    * DayWorkloadTemplateID : INTEGER <<PK>>
+entity DayWorkloadTemplate {
+    * Id : int <<PK>>
+    * WeeklyTemplateId : int <<FK>>
     --
-    WeeklyWorkloadTemplateID : INTEGER <<FK>>
-    Day : TEXT
+    DayName : string
 }
 
-entity "DayWorkLoadTemplateWorkLoadTemplate" as DWTWLT {
-    * DayWorkLoadTemplateWorkLoadTemplateID : INTEGER <<PK>>
+entity TemplateDayWorkLoads {
+    * DayTemplateId : int <<FK>>
+    * WorkLoadTemplateId : int <<FK>>
+}
+
+entity WorkGroupChildren {
+    * GroupId : int <<FK>>
+    * ChildTemplateId : int <<FK>>
+}
+
+entity EmployeeTemplateSkills {
+    * EmployeeId : string <<FK>>
+    * TemplateId : int <<FK>>
+}
+
+entity WeeklyWorkloadInstance {
+    * Id : int <<PK>>
     --
-    DayWorkLoadTemplateID : INTEGER <<FK>>
-    WorkLoadTemplateID : INTEGER <<FK>>
+    TemplateId : int <<FK>>
+    StartDate : string
+    EndDate : string
 }
 
-entity "WeeklyWorkloadInstance" as WWI {
-    * WeeklyWorkloadInstanceID : INTEGER <<PK>>
+entity DayWorkloadInstance {
+    * Id : int <<PK>>
+    * WeeklyInstanceId : int <<FK>>
     --
-    WeeklyWorkloadTemplateID : INTEGER <<FK>>
-    StartDate : TEXT
-    EndDate : TEXT
+    DayName : string
 }
 
-entity "DayWorkloadInstance" as DWI {
-    * DayWorkloadInstanceID : INTEGER <<PK>>
+entity WorkLoadInstance {
+    * Id : int <<PK>>
+    * DayInstanceId : int <<FK>>
+    * TemplateId : int <<FK>>
     --
-    WeeklyWorkloadInstanceID : INTEGER <<FK>>
-    Day : TEXT
-    Date : TEXT  // actual calendar date
+    EstimatedHours : double
+    Type : string
 }
 
-entity "WorkLoadInstance" as WLI {
-    * WorkLoadInstanceID : INTEGER <<PK>>
-    --
-    WorkLoadTemplateID : INTEGER <<FK>>
-    DayWorkloadInstanceID : INTEGER <<FK>>
-    WeeklyWorkloadInstanceID : INTEGER <<FK>>
-    EmployeeID : INTEGER <<FK>>  // nullable
+entity AssignedEmployees {
+    * WorkLoadInstanceId : int <<FK>>
+    * EmployeeId : string <<FK>>
 }
 
-' -----------------------
-'   RELATIONSHIPS
-' -----------------------
+' ============================
+'      RELATIONSHIPS
+' ============================
 
-' Composite groups
-WLT "1" <-- "0..*" GWC : ParentWorkLoadTemplateID
-WLT "1" <-- "0..*" GWC : ChildWorkLoadTemplateID
+Employee ||--o{ EmployeeTemplateSkills : has skill
+WorkLoadTemplate ||--o{ EmployeeTemplateSkills : skill link
 
-' Skills
-EMP "1" <-- "0..*" EWS : EmployeeID
-WLT "1" <-- "0..*" EWS : WorkLoadTemplateID
+WeeklyWorkloadTemplate ||--o{ DayWorkloadTemplate : has days
+DayWorkloadTemplate ||--o{ TemplateDayWorkLoads : workload link
+WorkLoadTemplate ||--o{ TemplateDayWorkLoads : included in day
 
-' Weekly templates and day templates
-WWT "1" --> "0..*" DWT : WeeklyWorkloadTemplateID
+WorkLoadTemplate ||--o{ WorkGroupChildren : group parent
+WorkLoadTemplate ||--o{ WorkGroupChildren : group child
 
-' Day template workload assignments
-DWT "1" --> "0..*" DWTWLT : DayWorkLoadTemplateID
-WLT "1" <-- "0..*" DWTWLT : WorkLoadTemplateID
+WeeklyWorkloadTemplate ||--o{ WeeklyWorkloadInstance : creates
+WeeklyWorkloadInstance ||--o{ DayWorkloadInstance : has days
+DayWorkloadInstance ||--o{ WorkLoadInstance : workloads
 
-' Weekly instances
-WWT "1" --> "0..*" WWI : WeeklyWorkloadTemplateID
+WorkLoadTemplate ||--o{ WorkLoadInstance : based on template
 
-' Day instances (cloned from DWT)
-WWI "1" --> "0..*" DWI : WeeklyWorkloadInstanceID
-
-' Workload instances (cloned and expanded leaves)
-WLT "1" <-- "0..*" WLI : WorkLoadTemplateID
-DWI "1" --> "0..*" WLI : DayWorkloadInstanceID
-WWI "1" --> "0..*" WLI : WeeklyWorkloadInstanceID
-
-' Workload instance assignment
-EMP "1" <-- "0..*" WLI : EmployeeID
+WorkLoadInstance ||--o{ AssignedEmployees : assigned to
+Employee ||--o{ AssignedEmployees : assigned
 
 @enduml

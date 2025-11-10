@@ -677,7 +677,7 @@ public sealed class DatabaseHandler
         {
             var templateId = r.GetInt32(0);
 
-            // ✅ NEW: Expand groups into leaf templates
+     
             var leafTemplates = await ExpandToLeafTemplatesAsync(templateId);
 
             foreach (var leaf in leafTemplates)
@@ -1350,7 +1350,7 @@ public sealed class DatabaseHandler
             est = (minutesPerEmployee * numberOfEmployees) / 60.0;
         }
 
-        // ✅ Persist recalculated EstimatedHours
+        // Persist recalculated EstimatedHours
         await using (var update = conn.CreateCommand())
         {
             update.CommandText = "UPDATE WorkLoadTemplate SET EstimatedHours=@h WHERE WorkLoadTemplateID=@id;";

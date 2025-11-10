@@ -212,7 +212,7 @@ public partial class SettingsPageViewModel : PageViewModel
 
         Directory.CreateDirectory(cacheDirectory);
 
-        // ✅ .NET 6/7 compatible extraction
+        // 
         System.IO.Compression.ZipFile.ExtractToDirectory(zipPath, cacheDirectory);
     }
 
@@ -220,7 +220,7 @@ public partial class SettingsPageViewModel : PageViewModel
 
 
 // =====================================
-// ✅ SETTINGS MODEL (JSON STORAGE)
+//  SETTINGS MODEL 
 // =====================================
 public class SettingsModel
 {

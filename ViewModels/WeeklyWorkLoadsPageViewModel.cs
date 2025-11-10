@@ -36,11 +36,11 @@ public partial class WeeklyWorkLoadsPageViewModel : PageViewModel
     [ObservableProperty]
     private WorkLoadTemplateVM? selectedWorkload;
 
-    // ✅ NEW: all available workload templates
+    //  all available workload templates
     [ObservableProperty]
     private ObservableCollection<WorkLoadTemplateVM> availableWorkloads = new();
 
-    // ✅ NEW: user-selected workload to add
+    //  user-selected workload to add
     [ObservableProperty]
     private WorkLoadTemplateVM? selectedAvailableWorkload;
 
@@ -51,7 +51,7 @@ public partial class WeeklyWorkLoadsPageViewModel : PageViewModel
         db = DatabaseHandler.Instance;
 
         _ = LoadWeeklyTemplatesAsync();
-        _ = LoadAvailableWorkloadsAsync();  // ✅ load all workload templates
+        _ = LoadAvailableWorkloadsAsync();  // load all workload templates
     }
 
     // ------------------------------------------------------------
@@ -164,7 +164,7 @@ public partial class WeeklyWorkLoadsPageViewModel : PageViewModel
     }
 
     // ------------------------------------------------------------
-    // ✅ Load ALL available workload templates (for ComboBox)
+    // Load ALL available workload templates (for ComboBox)
     // ------------------------------------------------------------
     private async Task LoadAvailableWorkloadsAsync()
     {
@@ -187,7 +187,7 @@ public partial class WeeklyWorkLoadsPageViewModel : PageViewModel
 
 
     // ------------------------------------------------------------
-    // ✅ Add selected workload to day (from ComboBox)
+    // Add selected workload to day (from ComboBox)
     // ------------------------------------------------------------
     [RelayCommand]
     public async Task AddWorkloadToDayAsync()

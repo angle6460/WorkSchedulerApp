@@ -124,14 +124,14 @@ public partial class WorkLoadsPageViewModel : PageViewModel
             });
         }
 
-        // ✅ Recalculate total hours of the group
+        //  Recalculate total hours of the group
         double total = 0;
         foreach (var child in GroupChildren)
             total += child.EstimatedHours;
 
         SelectedWorkload.EstimatedHours = total;
 
-        // ✅ Refresh left-side workload list so UI updates
+        //  Refresh left-side workload list so UI updates
         await LoadWorkloadsAsync();
 
 
@@ -291,7 +291,7 @@ public partial class WorkLoadsPageViewModel : PageViewModel
             SelectedAvailableWorkload.Id
         );
 
-        // ✅ Recalculate hours in DB and update VM
+        // Recalculate hours in DB and update VM
         SelectedWorkload.EstimatedHours =
             await db.GetEstimatedHoursRecursiveAsync(SelectedWorkload.Id);
 
@@ -308,7 +308,7 @@ public partial class WorkLoadsPageViewModel : PageViewModel
 
         await db.RemoveChildFromGroupAsync(SelectedWorkload.Id, SelectedChild.Id);
 
-        // ✅ Recalculate group hours
+        // Recalculate group hours
         SelectedWorkload.EstimatedHours =
             await db.GetEstimatedHoursRecursiveAsync(SelectedWorkload.Id);
 

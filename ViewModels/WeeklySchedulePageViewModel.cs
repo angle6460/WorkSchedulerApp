@@ -26,7 +26,7 @@ public partial class WeeklySchedulePageViewModel : PageViewModel
     // Details panel
     [ObservableProperty] private ObservableCollection<DayInstanceDetail> dayDetails = new();
 
-    // ✅ NEW EXPORT COMMAND
+    // EXPORT COMMAND
     public IAsyncRelayCommand ExportAssignedEmployeesCommand { get; }
 
     public WeeklySchedulePageViewModel()
@@ -178,13 +178,13 @@ public partial class WeeklySchedulePageViewModel : PageViewModel
         }
     }
 
-    // ✅ NEW EXPORT FUNCTION — NO SQL USED
+    //  NEW EXPORT FUNCTION — NO SQL USED
     private async Task ExportAssignedEmployeesAsync()
     {
         if (SelectedSchedule == null)
             return;
 
-        // ✅ Build a path next to Database.db
+        //  Build a path next to Database.db
         var dbDirectory = Path.Combine(AppContext.BaseDirectory, "Database");
 
         if (!Directory.Exists(dbDirectory))
@@ -224,10 +224,10 @@ public partial class WeeklySchedulePageViewModel : PageViewModel
             }
         }
 
-        // ✅ Save file next to Database.db
+        //Save file next to Database.db
         File.WriteAllText(filePath, sb.ToString());
 
-        Console.WriteLine($"✅ Exported assigned employees to: {filePath}");
+        Console.WriteLine($"Exported assigned employees to: {filePath}");
     }
 
 }

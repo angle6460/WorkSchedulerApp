@@ -1,4 +1,4 @@
-﻿using WorkSchedulerApp.Data;
+using WorkSchedulerApp.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
@@ -21,11 +21,11 @@ public partial class EmployeesPageViewModel : PageViewModel
     [NotifyPropertyChangedFor(nameof(EditingEmployee))]
     private Employee newEmployee = new();
 
-    // ✅ UI SKILLS LIST (ViewModel-owned)
+    // UI SKILLS LIST (ViewModel-owned)
     [ObservableProperty]
     private ObservableCollection<WorkLoadTemplateVM> skillsForUI = new();
 
-    // ✅ Available skills to add
+    // Available skills to add
     [ObservableProperty]
     private ObservableCollection<WorkLoadTemplateVM> availableSkills = new();
 

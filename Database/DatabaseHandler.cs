@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.Sqlite;
+using Microsoft.Data.Sqlite;
 
 namespace WorkSchedulerApp.Database;
 
@@ -649,7 +649,7 @@ public sealed class DatabaseHandler
                                        """;
 
         insertDayInstCmd.Parameters.Add(new SqliteParameter("@wkI", weeklyInstanceId));
-        insertDayInstCmd.Parameters.Add(new SqliteParameter("@tplId", dayTplId));      // ✅ REQUIRED FIX
+        insertDayInstCmd.Parameters.Add(new SqliteParameter("@tplId", dayTplId));      // REQUIRED FIX
         insertDayInstCmd.Parameters.Add(new SqliteParameter("@day", dayName));
 
         // IMPORTANT: Replace this with your real date logic if needed

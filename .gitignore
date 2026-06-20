@@ -1,6 +1,23 @@
+## Build output
 bin/
 obj/
 /packages/
-riderModule.iml
-/_ReSharper.Caches/
-/.idea
+
+## Rider / ReSharper
+.idea/
+*.iml
+_ReSharper.Caches/
+
+## IDE user-specific settings (Rider .DotSettings.user, VS .user/.suo)
+*.user
+*.suo
+
+## OS-generated files
+.DS_Store
+Thumbs.db
+
+## Local SQLite databases (created at runtime, not source)
+*.db
+*.db-shm
+*.db-wal
+TestDB/

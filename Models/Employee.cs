@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -13,7 +13,7 @@ namespace WorkSchedulerApp.Models
         public string Availability { get; set; } = string.Empty;
         public string ContractedHours { get; set; } = string.Empty;
 
-        // ✅ Skill IDs only (keeps model clean)
+        // Skill IDs only (keeps model clean)
         public List<int> SkillTemplateIds { get; set; } = new();
 
         public Employee() { }

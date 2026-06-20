@@ -3,6 +3,7 @@
         <OutputType>WinExe</OutputType>
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
@@ -46,6 +47,13 @@
         <SubType>Code</SubType>
       </Compile>
     </ItemGroup>
+
+    <!-- The test project lives in a subfolder of this project; exclude its sources
+         from this app's default compile glob so test types aren't compiled into the app. -->
+    <ItemGroup>
+      <Compile Remove="TestProject1\**\*.cs" />
+    </ItemGroup>
+
     <PropertyGroup>
       <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     </PropertyGroup>

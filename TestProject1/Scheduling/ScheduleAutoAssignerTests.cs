@@ -1,4 +1,4 @@
-﻿using WorkSchedulerApp.TestProject1.Database;
+using WorkSchedulerApp.TestProject1.Database;
 using WorkSchedulerApp.Database;
 using WorkSchedulerApp.Scheduling;
 
@@ -13,13 +13,13 @@ namespace WorkSchedulerApp.TestProject1.Scheduling
         {
             var db = DatabaseHandler.Instance;
 
-            // 1️⃣ Create employees with skills
+            // 1. Create employees with skills
             var empA = "EMP_" + Guid.NewGuid().ToString("N");
             var empB = "EMP_" + Guid.NewGuid().ToString("N");
             await db.InsertEmployeeAsync(empA, "Alice", "Cashier", 40, "Mon-Fri", "40");
             await db.InsertEmployeeAsync(empB, "Bob", "Stocker", 40, "Mon-Fri", "40");
 
-            // 2️⃣ Create workloads
+            // 2. Create workloads
             var tplCashier = await db.InsertFixedWorkLoadTemplateAsync("Register", "Cashiering", 2);
             var tplStocker = await db.InsertPerItemWorkLoadTemplateAsync("Stock Shelves", "Restock", 5, 24);
 
@@ -27,7 +27,7 @@ namespace WorkSchedulerApp.TestProject1.Scheduling
             await db.AddTemplateSkillToEmployeeAsync(empA, tplCashier);
             await db.AddTemplateSkillToEmployeeAsync(empB, tplStocker);
 
-            // 3️⃣ Build a weekly template and attach workloads to specific days
+            // 3. Build a weekly template and attach workloads to specific days
             var wkTplId = await db.InsertWeeklyWorkloadTemplateWithSevenDaysAsync("Week AutoAssign", "Testing auto assigner");
             var days = await db.GetDayWorkloadTemplatesForWeeklyTemplateAsync(wkTplId);
             var monTpl = days.First(d => d.day.Equals("Monday", StringComparison.OrdinalIgnoreCase)).id;
@@ -36,15 +36,15 @@ namespace WorkSchedulerApp.TestProject1.Scheduling
             await db.AddWorkLoadTemplateToDayAsync(monTpl, tplCashier);
             await db.AddWorkLoadTemplateToDayAsync(tueTpl, tplStocker);
 
-            // 4️⃣ Clone to instance (creates DayWorkloadInstances & WorkLoadInstances)
+            // 4. Clone to instance (creates DayWorkloadInstances & WorkLoadInstances)
             var weekStart = new DateTime(2025, 1, 6);
             var weekEnd = weekStart.AddDays(6);
             var wkInstanceId = await db.CloneWeeklyWorkloadTemplateToInstanceAsync(wkTplId, weekStart, weekEnd);
 
-            // 5️⃣ Run auto-assigner
+            // 5. Run auto-assigner
             var results = await ScheduleAutoAssigner.AssignEmployeesToWeeklyWorkloadInstanceAsync(db, wkInstanceId);
 
-            // 6️⃣ Assert results
+            // 6. Assert results
             Assert.That(results.Count, Is.EqualTo(2), "Should assign one employee to each workload instance");
 
             var assignedIds = results.Select(r => r.employeeId).ToList();

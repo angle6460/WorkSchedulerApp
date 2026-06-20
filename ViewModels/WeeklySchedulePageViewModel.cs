@@ -226,8 +226,6 @@ public partial class WeeklySchedulePageViewModel : PageViewModel
 
         //Save file next to Database.db
         File.WriteAllText(filePath, sb.ToString());
-
-        Console.WriteLine($"Exported assigned employees to: {filePath}");
     }
 
 }

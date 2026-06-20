@@ -5,15 +5,8 @@ using WorkSchedulerApp.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using WorkSchedulerApp.Data;
 using WorkSchedulerApp.Factories;
-using MainViewModel = WorkSchedulerApp.ViewModels.MainViewModel;
-using PageViewModel = WorkSchedulerApp.ViewModels.PageViewModel;
-using SettingsPageViewModel = WorkSchedulerApp.ViewModels.SettingsPageViewModel;
 
 namespace WorkSchedulerApp;
-
-using MainViewModel = MainViewModel;
-using PageViewModel = PageViewModel;
-using SettingsPageViewModel = SettingsPageViewModel;
 
 public partial class App : Application
 {

@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
@@ -14,7 +14,7 @@ public partial class SettingsPageViewModel : PageViewModel
     private readonly string settingsFilePath;
     private readonly string cacheDirectory;
 
-    // ✅ Bindable properties
+    // Bindable properties
     [ObservableProperty]
     private bool _skipFiles;
 
@@ -39,7 +39,7 @@ public partial class SettingsPageViewModel : PageViewModel
     }
 
     // =====================================
-    // ✅ LOAD + SAVE SETTINGS
+    // LOAD + SAVE SETTINGS
     // =====================================
     private void LoadSettings()
     {
@@ -91,7 +91,7 @@ public partial class SettingsPageViewModel : PageViewModel
 
 
     // =====================================
-    // ✅ ADD FOLDER
+    // ADD FOLDER
     // =====================================
     [RelayCommand]
     private async Task AddFolderAsync()
@@ -123,7 +123,7 @@ public partial class SettingsPageViewModel : PageViewModel
     }
 
     // =====================================
-    // ✅ REMOVE SELECTED FOLDER
+    // REMOVE SELECTED FOLDER
     // =====================================
     [RelayCommand]
     private void RemoveFolder(string? folderPath)
@@ -139,7 +139,7 @@ public partial class SettingsPageViewModel : PageViewModel
     }
 
     // =====================================
-    // ✅ CLEAR CACHE
+    // CLEAR CACHE
     // =====================================
     [RelayCommand]
     private void ClearCache()
@@ -149,13 +149,17 @@ public partial class SettingsPageViewModel : PageViewModel
             foreach (var file in Directory.GetFiles(cacheDirectory))
                 File.Delete(file);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            // Cache clearing is best-effort; log to debug output rather than crashing the UI.
+            System.Diagnostics.Debug.WriteLine($"ClearCache failed: {ex.Message}");
+        }
 
         // Optionally: show confirmation dialog later
     }
 
     // =====================================
-    // ✅ EXPORT CACHE
+    // EXPORT CACHE
     // =====================================
     [RelayCommand]
     private async Task ExportCacheAsync()
@@ -185,7 +189,7 @@ public partial class SettingsPageViewModel : PageViewModel
 
 
     // =====================================
-    // ✅ IMPORT CACHE
+    // IMPORT CACHE
     // =====================================
     [RelayCommand]
     private async Task ImportCacheAsync()

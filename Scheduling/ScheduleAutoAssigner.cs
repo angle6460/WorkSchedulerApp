@@ -1,4 +1,4 @@
-﻿using WorkSchedulerApp.Database;
+using WorkSchedulerApp.Database;
 using System.Globalization;
 namespace WorkSchedulerApp.Scheduling
 {
@@ -15,8 +15,6 @@ namespace WorkSchedulerApp.Scheduling
                 DatabaseHandler db, int weeklyWorkloadInstanceId)
         {
             var assignments = new List<(string employeeId, int workLoadInstanceId)>();
-
-            Console.WriteLine($"[AutoAssign] Starting assignment for weekly instance #{weeklyWorkloadInstanceId}");
 
             // Get all day instances
             var dayInstances = await db.GetDayWorkloadInstancesForWeeklyInstanceAsync(weeklyWorkloadInstanceId);
@@ -44,14 +42,7 @@ namespace WorkSchedulerApp.Scheduling
                     var ranked = await RankEmployeesForTask(db, workLoadTemplateId, weeklyWorkloadInstanceId);
 
                     if (ranked.Count == 0)
-                    {
-                        Console.WriteLine(
-                            $"[AutoAssign] No qualified employees for template {workLoadTemplateId} on {dayName}");
                         continue;
-                    }
-
-                    Console.WriteLine(
-                        $"[AutoAssign] Assigning up to {employeesNeeded} employees for task {workLoadInstanceId} ({totalHours}h)");
 
                     int assigned = 0;
 
@@ -68,16 +59,11 @@ namespace WorkSchedulerApp.Scheduling
 
                         assignments.Add((employeeId, workLoadInstanceId));
 
-                        Console.WriteLine(
-                            $"[AutoAssign] Assigned {employeeId} to WorkLoadInstance {workLoadInstanceId} ({template?.name}) on {dayName}"
-                        );
-
                         assigned++;
                     }
                 }
             }
 
-            Console.WriteLine($"[AutoAssign] Completed assignments for instance #{weeklyWorkloadInstanceId}");
             return assignments;
         }
 
@@ -116,13 +102,9 @@ namespace WorkSchedulerApp.Scheduling
             foreach (var (employeeId, _) in qualified)
             {
                 if (!byId.TryGetValue(employeeId, out var emp))
-                {
-                    Console.WriteLine($"[Rank] Skipping unknown employeeId '{employeeId}'");
                     continue;
-                }
 
-                // Parse contracted hours safely (TEXT → double)
-                // Default to 0 if null/empty/invalid; log once so you can fix data later.
+                // Parse contracted hours safely (TEXT → double); default to 0 if null/empty/invalid.
                 double contracted = 0.0;
                 var contractedRaw = emp.contractedHours;
 
@@ -131,23 +113,14 @@ namespace WorkSchedulerApp.Scheduling
                     if (!double.TryParse(contractedRaw, NumberStyles.Float, CultureInfo.InvariantCulture,
                             out contracted))
                     {
-                        // Try permissive parse using current culture as a fallback (e.g., "8,5")
-                        if (!double.TryParse(contractedRaw, NumberStyles.Float, CultureInfo.CurrentCulture,
-                                out contracted))
-                        {
-                            Console.WriteLine(
-                                $"[Rank] Invalid contractedHours '{contractedRaw}' for employee '{employeeId}'. Defaulting to 0.");
-                            contracted = 0.0;
-                        }
+                        // Fall back to current-culture parsing (e.g., "8,5"); defaults to 0 if still invalid.
+                        double.TryParse(contractedRaw, NumberStyles.Float, CultureInfo.CurrentCulture,
+                            out contracted);
                     }
                 }
-                else
-                {
-                    Console.WriteLine($"[Rank] Empty contractedHours for employee '{employeeId}'. Defaulting to 0.");
-                }
 
-                // requestedHours is already an int per your model; treat null as 0 if your model allows it
-                double requested = emp.requestedHours; // if nullable in your model, use: emp.requestedHours ?? 0
+                // requestedHours is already an int per the model
+                double requested = emp.requestedHours;
 
                 // Assigned hours this week
                 double assigned = await db.SumAssignedHoursForEmployeeInWeek(employeeId, weeklyInstanceId);

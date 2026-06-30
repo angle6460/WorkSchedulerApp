@@ -84,7 +84,7 @@
                 <ItemsControl ItemsSource="{Binding SkillsForUI}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:WorkLoadTemplateVM">
-                            <Border Padding="5" Margin="2" CornerRadius="5"
+                            <Border Padding="6" Margin="2" CornerRadius="8"
                                     Background="{DynamicResource SecondaryBackground}">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
                                     <TextBlock Text="{Binding Name}" />

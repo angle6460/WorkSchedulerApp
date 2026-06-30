@@ -1,9 +1,9 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="WorkSchedulerApp.App"
-             RequestedThemeVariant="Default"
+             RequestedThemeVariant="Dark"
              xmlns:local="clr-namespace:WorkSchedulerApp">
-             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+             <!-- Forced to "Dark" so built-in Fluent controls (TextBox, ComboBox, ListBox, DatePicker...) always match the dark palette instead of following the OS theme. -->
              
              <Application.DataTemplates>
                  <local:ViewLocator></local:ViewLocator>
@@ -15,28 +15,44 @@
     </Application.Styles>
              
     <Application.Resources>
-        
-        <SolidColorBrush x:Key="PrimaryBackground">#14172D</SolidColorBrush>
-        <SolidColorBrush x:Key="PrimaryForeground">#CFCFCF</SolidColorBrush>
-        <LinearGradientBrush x:Key="PrimaryBackgroundGradient" StartPoint="0%, 0%" EndPoint="100%, 0%">
-            <GradientStop Offset="0" Color="#111214"></GradientStop>
-            <GradientStop Offset="1" Color="#151E3E"></GradientStop>
+
+        <!-- Global corner rounding: overriding these Fluent theme keys rounds most
+             built-in controls (TextBox, ComboBox, ListBox, DatePicker, popups...) at once. -->
+        <CornerRadius x:Key="ControlCornerRadius">8</CornerRadius>
+        <CornerRadius x:Key="OverlayCornerRadius">8</CornerRadius>
+
+        <!-- ===================== Warm Amber palette ===================== -->
+        <!-- Surfaces -->
+        <SolidColorBrush x:Key="PrimaryBackground">#17161B</SolidColorBrush>
+        <SolidColorBrush x:Key="SecondaryBackground">#232228</SolidColorBrush>
+        <SolidColorBrush x:Key="BorderSubtle">#3A3741</SolidColorBrush>
+        <LinearGradientBrush x:Key="PrimaryBackgroundGradient" StartPoint="0%, 0%" EndPoint="0%, 100%">
+            <GradientStop Offset="0" Color="#232228"></GradientStop>
+            <GradientStop Offset="1" Color="#17161B"></GradientStop>
         </LinearGradientBrush>
-        
-        <SolidColorBrush x:Key="PrimaryHover">#333B5A</SolidColorBrush>
-        <SolidColorBrush x:Key="PrimaryActive">#6633dd</SolidColorBrush>
-        <SolidColorBrush x:Key="PrimaryHoverText">White</SolidColorBrush>
-        
+
+        <!-- Text -->
+        <SolidColorBrush x:Key="PrimaryForeground">#ECE9E6</SolidColorBrush>
+        <SolidColorBrush x:Key="MutedForeground">#A39E98</SolidColorBrush>
+        <SolidColorBrush x:Key="PrimaryHoverText">#FFFFFF</SolidColorBrush>
+
+        <!-- Interaction states -->
+        <SolidColorBrush x:Key="PrimaryHover">#2E2C33</SolidColorBrush>
+        <SolidColorBrush x:Key="PrimaryActive">#B45309</SolidColorBrush>
+
+        <!-- Accent (amber -> orange) -->
         <LinearGradientBrush x:Key="PrimaryButtonBackgroundGradient" StartPoint="0%, 0%" EndPoint="100%, 0%">
-            <GradientStop Offset="0" Color="#00ffff"></GradientStop>
-            <GradientStop Offset="1" Color="#ff00ff"></GradientStop>
+            <GradientStop Offset="0" Color="#F59E0B"></GradientStop>
+            <GradientStop Offset="1" Color="#FB923C"></GradientStop>
         </LinearGradientBrush>
-        <SolidColorBrush x:Key="OutlineButtonForegroundColor">#00ffff</SolidColorBrush>
+        <SolidColorBrush x:Key="OutlineButtonForegroundColor">#F59E0B</SolidColorBrush>
+
+        <!-- Alert (red) -->
         <LinearGradientBrush x:Key="AlertButtonBackgroundGradient" StartPoint="0%, 0%" EndPoint="100%, 0%">
-            <GradientStop Offset="0" Color="#ffff00"></GradientStop>
-            <GradientStop Offset="1" Color="#ff8800"></GradientStop>
+            <GradientStop Offset="0" Color="#EF4444"></GradientStop>
+            <GradientStop Offset="1" Color="#F87171"></GradientStop>
         </LinearGradientBrush>
-        
+
         <FontFamily x:Key="PhosphorFill">/Assets/Font/Phosphor-Fill.ttf#Phosphor-Fill</FontFamily>
         <FontFamily x:Key="Phosphor">/Assets/Font/Phosphor.ttf#Phosphor</FontFamily>
     </Application.Resources>

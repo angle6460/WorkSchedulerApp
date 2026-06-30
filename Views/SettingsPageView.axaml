@@ -44,7 +44,7 @@
             <!-- Locations -->
             <StackPanel>
                 <Label Classes="h2" Content="Locations"></Label>
-                <Grid ShowGridLines="True" ColumnDefinitions="*, Auto">
+                <Grid ColumnDefinitions="*, Auto">
                     <StackPanel>
                         <TextBlock TextWrapping="Wrap" Text="Add or remove the locations to search for Reporter Templates, Macros, Actions and other custom files or templates"></TextBlock>
                         <TextBlock TextWrapping="Wrap" Text="*All sub-directories will be search automatically"> </TextBlock>

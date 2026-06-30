@@ -125,7 +125,8 @@
                          GROUP CHILDREN SECTION
                     ======================================================= -->
                     <Border BorderThickness="1" Padding="10" Margin="0,15,0,0"
-                            BorderBrush="Gray"
+                            CornerRadius="8"
+                            BorderBrush="{DynamicResource BorderSubtle}"
                             IsVisible="{Binding WorkLoadIsGroup}">
                         <StackPanel Spacing="6">
 

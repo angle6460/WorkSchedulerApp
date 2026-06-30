@@ -82,10 +82,11 @@
                                             <DataTemplate x:DataType="vm:WorkLoadInstanceDetail">
 
                                                 <Border BorderThickness="1"
-                                                        Padding="5"
+                                                        Padding="8"
                                                         Margin="5"
-                                                        CornerRadius="5"
-                                                        BorderBrush="{DynamicResource PrimaryForeground}">
+                                                        CornerRadius="8"
+                                                        Background="{DynamicResource SecondaryBackground}"
+                                                        BorderBrush="{DynamicResource BorderSubtle}">
                                                     <StackPanel>
                                                         <TextBlock Text="{Binding Name}"
                                                                    FontWeight="Bold"/>

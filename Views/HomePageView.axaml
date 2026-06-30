@@ -1,8 +1,48 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:svg="clr-namespace:Avalonia.Svg.Skia;assembly=Avalonia.Svg.Skia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="WorkSchedulerApp.Views.HomePageView">
-    Welcome to HomePage
+             x:Class="WorkSchedulerApp.Views.HomePageView"
+             Background="{DynamicResource PrimaryBackground}"
+             Foreground="{DynamicResource PrimaryForeground}">
+
+    <Grid RowDefinitions="Auto, *">
+
+        <!-- HEADER -->
+        <Grid>
+            <svg:Svg Path="/Assets/Images/Banner.svg"
+                     Height="140"
+                     Stretch="UniformToFill" />
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Label Content="Work Scheduler" Classes="h2" HorizontalAlignment="Center" />
+                <Label Content="Build weekly schedules and auto-assign your team" HorizontalAlignment="Center" />
+            </StackPanel>
+        </Grid>
+
+        <!-- WELCOME CARD -->
+        <Border Grid.Row="1"
+                MaxWidth="560"
+                Margin="40"
+                Padding="32"
+                CornerRadius="8"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Center"
+                Background="{DynamicResource SecondaryBackground}"
+                BorderBrush="{DynamicResource BorderSubtle}"
+                BorderThickness="1">
+            <StackPanel Spacing="12">
+                <TextBlock Text="Welcome 👋"
+                           FontSize="24"
+                           FontWeight="Bold"
+                           HorizontalAlignment="Center" />
+                <TextBlock TextWrapping="Wrap"
+                           TextAlignment="Center"
+                           Foreground="{DynamicResource MutedForeground}"
+                           Text="Use the sidebar to manage employees, define workloads, build weekly templates, and generate schedules that auto-assign your team." />
+            </StackPanel>
+        </Border>
+
+    </Grid>
 </UserControl>

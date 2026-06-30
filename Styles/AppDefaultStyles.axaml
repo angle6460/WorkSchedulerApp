@@ -44,7 +44,7 @@
     <Style Selector="Button">
         <Setter Property="FontSize" Value="20"></Setter>
         <Setter Property="FontWeight" Value="Bold"></Setter>
-        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="CornerRadius" Value="8"/>
         <Setter Property="Foreground" Value="{DynamicResource PrimaryBackground}"></Setter>
         <Setter Property="Background" Value="{DynamicResource PrimaryButtonBackgroundGradient}"></Setter>
     </Style>
@@ -170,5 +170,44 @@
                 <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1"></TransformOperationsTransition>
             </Transitions>
         </Setter>
+    </Style>
+
+    <!-- ===================== Inputs (themed + rounded) ===================== -->
+    <!-- These controls used to fall through to default Fluent styling; bring them
+         into the dark palette and soften the corners. -->
+    <Style Selector="TextBox">
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Background" Value="{DynamicResource SecondaryBackground}"/>
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryForeground}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}"/>
+    </Style>
+
+    <Style Selector="ComboBox">
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Background" Value="{DynamicResource SecondaryBackground}"/>
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryForeground}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}"/>
+    </Style>
+
+    <Style Selector="NumericUpDown">
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Background" Value="{DynamicResource SecondaryBackground}"/>
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryForeground}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}"/>
+    </Style>
+
+    <Style Selector="DatePicker">
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryForeground}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}"/>
+    </Style>
+
+    <!-- Lists: transparent so cards/text sit on the page background, with a soft
+         rounded border so the region still reads as contained. -->
+    <Style Selector="ListBox">
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}"/>
+        <Setter Property="BorderThickness" Value="1"/>
     </Style>
 </Styles>
